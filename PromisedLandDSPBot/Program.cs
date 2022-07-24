@@ -5,6 +5,7 @@
 using System;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using Newtonsoft.Json;
 
 namespace PromisedLandDSPBot // Note: actual namespace depends on the project name.
 {
@@ -36,8 +37,17 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             {
                 Token = args[0],
                 TokenType = TokenType.Bot, // How the bot's API access is defined. (Leave as is)
-                Intents = DiscordIntents.AllUnprivileged // ATM, this is enough, but we may need to add these for functionality reasons. Remember to add the intents to the discord dev page!
+                Intents = DiscordIntents.Guilds 
+                          | DiscordIntents.GuildEmojis 
+                          | DiscordIntents.GuildMembers 
+                          | DiscordIntents.GuildMessageReactions 
+                          | DiscordIntents.DirectMessages
+                          | DiscordIntents.AllUnprivileged,
+                          // Remember to add these on the bot page!
+                //Intents = DiscordIntents.AllUnprivileged
             };
+            Console.WriteLine("Make Workspace...");
+            
             Console.WriteLine("MainLoopAwait...");
             MainBotLoop().GetAwaiter().GetResult();
             
@@ -65,6 +75,9 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             };
             */
             
+            // add custom handlers
+            
+            
             await Task.Delay(-1); // so the process doesn't end.
             
         }
@@ -73,7 +86,12 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
         private static async Task OnMessage(DiscordClient c, MessageCreateEventArgs e)
         {
             if (e.Message.Content.ToLower().StartsWith("ping")) 
-                await e.Message.RespondAsync("pong!"); 
+                await e.Message.RespondAsync("pong!");
+
+            if (e.Message.Content.ToLower().StartsWith("get config"))
+            {
+                
+            }
         }
         
     }
