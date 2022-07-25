@@ -2,12 +2,13 @@
 using Newtonsoft.Json;
 
 // this needs to be serializable to JSON - no complex objects. Keep it compliant.
-public class IMyServerConfig
+public class MyServerConfig
 {
     // 0 = unset
     public ulong GuildId { get; set; } = 0;
     /// <summary>
     /// If set aside from 0, this role defines the only role allowed to adjust permissions for the bot on this server.
+    /// This is of course besides roles that have the Administrator role.
     /// </summary>
     public ulong MasterAdminRoleId { get; set; } = 0;
     public ulong DesignatedSuggestionChannelId { get; set; } = 0;
@@ -15,7 +16,7 @@ public class IMyServerConfig
 }
 
 // for reaction role messages, we define 
-public class IMyReactionRoleConfig // to instance for Reaction role messages
+public class MyReactionRoleConfig // to instance for Reaction role messages
 {
     public ulong GuildId { get; } = 0;
     public ulong MessageId { get;  }= 0;
@@ -43,7 +44,7 @@ public class IMyReactionRoleConfig // to instance for Reaction role messages
 }
 
 
-public class IMySuggestionConfig // to instance once made
+public class MySuggestionConfig // to instance once made
 {
     public ulong SuggesterMessageId { get; } = 0;
     public ulong SuggestionMessageId { get; } = 0;

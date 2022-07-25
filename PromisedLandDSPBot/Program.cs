@@ -5,15 +5,27 @@
 using System;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands;
+using DSharpPlus.SlashCommands.EventArgs;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using PromisedLandDSPBot.modules;
 
 namespace PromisedLandDSPBot // Note: actual namespace depends on the project name.
 {
     // Program Entry
-    internal class Program
+    internal static class Program
     {
-        private static DiscordConfiguration? config;
-        private static DiscordClient? Client;
+        private static DiscordConfiguration? _config;
+
+        private static readonly CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration()
+        {
+            StringPrefixes = new[] {">"}
+        };
+        
+        private static DiscordClient? _client;
         
         
         static void Main(string[] args)
@@ -33,7 +45,7 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
                 Console.Clear();
             }
             
-            config = new DiscordConfiguration()
+            _config = new DiscordConfiguration()
             {
                 Token = args[0],
                 TokenType = TokenType.Bot, // How the bot's API access is defined. (Leave as is)
@@ -58,30 +70,48 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
         /// </summary>
         private static async Task MainBotLoop()
         {
-            Client = new DiscordClient(config);
+            _client = new DiscordClient(_config);
+            Console.WriteLine("Made Client Config. Adding Modules...");
+            // event handlers are added in-scope here - for instance:
+            _client.MessageCreated += OnMessage;
             
+            // add custom handlers handlers
+            var commands = _client.UseCommandsNext(CommandConfig);
+            commands.RegisterCommands<CommandModule1>();
+            commands.CommandErrored += CommandsOnCommandErrored;
+            
+            // add slash command handlers
+            var slash = _client.UseSlashCommands();
+            slash.RegisterCommands<SlashCommandModule1>();
+            slash.SlashCommandErrored += SlashOnSlashCommandErrored;
+            string s = "";
+
+
+
+            Console.WriteLine("Modules added successfully!");
             // login to client and await this success.
             Console.WriteLine("Attempting Login...");
-            await Client.ConnectAsync();
+            await _client.ConnectAsync();
             Console.WriteLine("Login Complete!");
-            // event handlers are added in-scope here - for instance:
-            Client.MessageCreated += OnMessage;
-            //---- OR ----
-            /*
-            Client.MessageCreated += async (s, e) =>
-            {
-                if (e.Message.Content.ToLower().StartsWith("ping")) 
-                    await e.Message.RespondAsync("pong!");
-            };
-            */
-            
-            // add custom handlers
-            
-            
             await Task.Delay(-1); // so the process doesn't end.
             
         }
 
+        private static async Task CommandsOnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+        {
+            Console.WriteLine($"Normal Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.Command} was the culprit.");
+            await OnErrorChannelReport(e.Context.Member, e.Context.Channel);
+            //throw new NotImplementedException();
+        }
+
+        private static async Task SlashOnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+        {
+            Console.WriteLine($"Slash Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.CommandName} was the culprit.");
+            await OnErrorChannelReport(e.Context.Member, e.Context.Channel);
+            //throw new NotImplementedException();
+        }
+
+        
         // Example Async Task Definition for an OnMessage Event - note name can be anything - but best to keep it fairly nominal.
         private static async Task OnMessage(DiscordClient c, MessageCreateEventArgs e)
         {
@@ -91,6 +121,22 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             if (e.Message.Content.ToLower().StartsWith("get config"))
             {
                 
+            }
+        }
+
+
+        /// <summary>
+        /// To report back to the user regarding the error that occured. We do not tell what happened, just the fact that it did.
+        /// </summary>
+        /// <param name="m">The Guild Member Invoker</param>
+        /// <param name="dc">The Channel to post this message in. </param>
+        /// <returns></returns>
+        private static async Task OnErrorChannelReport(DiscordMember? m, DiscordChannel dc)
+        {
+            if (m != null)
+            {
+                await dc.SendMessageAsync(
+                    $"Hi {m.Username}... So uh.... there seems to be a problem in paradise... Please contact a bot administrator....");   
             }
         }
         
