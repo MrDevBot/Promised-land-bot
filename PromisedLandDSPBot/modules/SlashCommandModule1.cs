@@ -21,7 +21,7 @@ public class SlashCommandModule1 : ApplicationCommandModule
     
     #region DiscordSharpPlus_testing stuffs
     // README - Put functions that are debug in nature here - only available to bot devs in Promised Land Server
-    [SlashCommandGroup("debug", "Debug Functions - Special Access Only"), RequireRoles(RoleCheckMode.All, new ulong[]{983462019250421800L})] // This role is the "bot dev" permission role in Promised Land.
+    [SlashCommandGroup("debug", "Debug Functions - Special Access Only"), RequireRoles(RoleCheckMode.All, 983462019250421800)] // This role is the "bot dev" permission role in Promised Land.
     public class DebugModule : ApplicationCommandModule
     {
         [SlashCommand("embedtest", "Made to test how embeds work in this framework."), RequirePermissions(Permissions.SendMessages)]
