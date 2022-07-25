@@ -8,6 +8,7 @@ public class IMyServerConfig
     public ulong GuildId { get; set; } = 0;
     /// <summary>
     /// If set aside from 0, this role defines the only role allowed to adjust permissions for the bot on this server.
+    /// This is of course besides roles that have the Administrator role.
     /// </summary>
     public ulong MasterAdminRoleId { get; set; } = 0;
     public ulong DesignatedSuggestionChannelId { get; set; } = 0;
