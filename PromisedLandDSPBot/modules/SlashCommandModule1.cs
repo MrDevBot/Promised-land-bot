@@ -50,8 +50,21 @@ public class SlashCommandModule1 : ApplicationCommandModule
         
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(de));
         }
-        
-        
+
+        [SlashCommand("modaltest", "Made to test how modals work in this framework.")]
+        public async Task ModalTestCommand(InteractionContext ctx,
+            [Option("title", "The title of the Modal")] string title = "Modal Title")
+        {
+            var response = new DiscordInteractionResponseBuilder();
+            response
+                .WithTitle("Super cool modal!")
+                .WithCustomId("my-modal")
+                .AddComponents(new TextInputComponent(label: "Favorite food", customId: "fav-food", placeholder: "Pizza, Icecream, etc", max_length: 30))
+                .AddComponents(new TextInputComponent("Why?", "why-fav", "Because it tastes good", required: false, style: TextInputStyle.Paragraph));
+
+            await ctx.CreateResponseAsync(InteractionResponseType.Modal, response);
+            
+        }
         
     }
 
