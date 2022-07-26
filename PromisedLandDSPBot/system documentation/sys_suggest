@@ -1,6 +1,0 @@
-﻿## SYS: Suggestion System
-
-1. User runs /suggest [text] in allowed channels 
-2. Bot reacts with a "YES" reaction or something like that.
-3. Bot makes embed and posts to designated suggestion channel (stored in config) (as a poll - need to make a poll system)
-4. 
