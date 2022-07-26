@@ -11,7 +11,6 @@ using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using PromisedLandDSPBot.modules;
 
 namespace PromisedLandDSPBot // Note: actual namespace depends on the project name.
 {
@@ -31,23 +30,12 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
         static void Main(string[] args)
         // Expects token as arg[0]. - for security reasons
         {
+            var config = Config.ReadConfig();
             Console.WriteLine("Bot Init...");
-            if (args.Length != 1)
-            {
-                Console.WriteLine("No Token in Arguments! Please Enter your token: ");
-                var inp = Console.ReadLine();
-                if (inp == null)
-                {
-                    Console.WriteLine("Failed to Provide Token - Cancelling...");
-                    return;
-                }
-                args = new[] { inp.ToString() };
-                Console.Clear();
-            }
-            
+
             _config = new DiscordConfiguration()
             {
-                Token = args[0],
+                Token = config.Token,
                 TokenType = TokenType.Bot, // How the bot's API access is defined. (Leave as is)
                 Intents = DiscordIntents.Guilds 
                           | DiscordIntents.GuildEmojis 
@@ -76,13 +64,20 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             _client.MessageCreated += OnMessage;
             
             // add custom handlers handlers
+            
             var commands = _client.UseCommandsNext(CommandConfig);
-            commands.RegisterCommands<CommandModule1>();
+            commands.RegisterCommands<Modules.Admin.Module.Base>();
+            commands.RegisterCommands<Modules.Debug.Module.Base>();
+            commands.RegisterCommands<Modules.Reactions.Module.Base>();
+            commands.RegisterCommands<Modules.Tickets.Module.Base>();
             commands.CommandErrored += CommandsOnCommandErrored;
             
             // add slash command handlers
             var slash = _client.UseSlashCommands();
-            slash.RegisterCommands<SlashCommandModule1>();
+            slash.RegisterCommands<Modules.Admin.Module.Slash>();
+            slash.RegisterCommands<Modules.Debug.Module.Slash>();
+            slash.RegisterCommands<Modules.Reactions.Module.Slash>();
+            slash.RegisterCommands<Modules.Tickets.Module.Slash>();
             slash.SlashCommandErrored += SlashOnSlashCommandErrored;
             
             
