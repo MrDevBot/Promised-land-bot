@@ -30,6 +30,7 @@ class Config
 
     private static Context CreateConfig(string path)
     {
+        Console.Write("please input your bot token: ");
         var ctx = new Context
         {
             Token = Console.ReadLine()!
