@@ -84,7 +84,10 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             var slash = _client.UseSlashCommands();
             slash.RegisterCommands<SlashCommandModule1>();
             slash.SlashCommandErrored += SlashOnSlashCommandErrored;
-            string s = "";
+            
+            
+            // hook modal submitted stuffs
+            _client.ModalSubmitted += ClientOnModalSubmitted;
 
 
 
@@ -95,6 +98,13 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             Console.WriteLine("Login Complete!");
             await Task.Delay(-1); // so the process doesn't end.
             
+        }
+
+        private static Task ClientOnModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
+        {
+            // Check modal id - if "suggestion-XXXX", delegate to a handler.
+            //throw new NotImplementedException();
+            return null;
         }
 
         private static async Task CommandsOnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
