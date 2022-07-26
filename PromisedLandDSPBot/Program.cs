@@ -3,9 +3,11 @@
 //Console.WriteLine("Hello, World!");
 // Written in .NET 5.0 Core notation, but supports all .NET Core 6.0 behaviour - have fun!
 using System;
+using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
@@ -63,13 +65,13 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             // event handlers are added in-scope here - for instance:
             _client.MessageCreated += OnMessage;
             
-            // add custom handlers handlers
+            // add custom handlers handlers - for base command handlers, if the group is empty, comment it out. :thanks: 
             
             var commands = _client.UseCommandsNext(CommandConfig);
             commands.RegisterCommands<Modules.Admin.Module.Base>();
             commands.RegisterCommands<Modules.Debug.Module.Base>();
-            commands.RegisterCommands<Modules.Reactions.Module.Base>();
-            commands.RegisterCommands<Modules.Tickets.Module.Base>();
+            //commands.RegisterCommands<Modules.Reactions.Module.Base>();
+            //commands.RegisterCommands<Modules.Tickets.Module.Base>();
             commands.CommandErrored += CommandsOnCommandErrored;
             
             // add slash command handlers
@@ -104,15 +106,15 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
 
         private static async Task CommandsOnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
         {
-            Console.WriteLine($"Normal Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.Command} was the culprit.");
-            await OnErrorChannelReport(e.Context.Member, e.Context.Channel);
+            Console.WriteLine($"\nNormal Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.Command} was the culprit.");
+            await OnErrorChannelReport(e.Context.Member, e.Context.Channel, e.Exception);
             //throw new NotImplementedException();
         }
 
         private static async Task SlashOnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
         {
             Console.WriteLine($"Slash Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.CommandName} was the culprit.");
-            await OnErrorChannelReport(e.Context.Member, e.Context.Channel);
+            await OnErrorChannelReport(e.Context.Member, e.Context.Channel, e.Exception);
             //throw new NotImplementedException();
         }
 
@@ -136,9 +138,25 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
         /// <param name="m">The Guild Member Invoker</param>
         /// <param name="dc">The Channel to post this message in. </param>
         /// <returns></returns>
-        private static async Task OnErrorChannelReport(DiscordMember? m, DiscordChannel dc)
+        private static async Task OnErrorChannelReport(DiscordMember? m, DiscordChannel dc, Exception e)
         {
-            if (m != null)
+            if (m == null)
+            {
+                return;
+                
+            }
+            if (e is CommandNotFoundException)
+            {
+                await dc.SendMessageAsync(
+                    $"Hi {m.Username}, this command is not recognised. Please consult a help function. (TODO help function!!)");
+            }
+            else if (e is InvalidOperationException)
+            {
+                await dc.SendMessageAsync(
+                    $"$Hi {m.Username}, you attempted to perform an invalid command. This may be because the"+
+                            " command is not fully implemented. Please contact a bot administrator.");
+            }
+            else
             {
                 await dc.SendMessageAsync(
                     $"Hi {m.Username}... So uh.... there seems to be a problem in paradise... Please contact a bot administrator....");   
