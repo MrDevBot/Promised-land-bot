@@ -5,7 +5,9 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 
 namespace PromisedLandDSPBot.Modules.Debug;
-
+/// <summary>
+/// Bot-specific debug commands - this is supposed to be used by bot admins to test functionality and debug errors.
+/// </summary>
 public class Module
 {
     //slash command implementations

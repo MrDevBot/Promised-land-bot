@@ -4,7 +4,9 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.SlashCommands;
 
 namespace PromisedLandDSPBot.Modules.Admin;
-
+/// <summary>
+/// This Module defines Server Admin's functionality through the bot. (bans, kicks, etc.)
+/// </summary>
 public class Module
 {
     //slash command implementations
