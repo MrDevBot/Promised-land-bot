@@ -1,44 +1,43 @@
-﻿namespace PromisedLandDSPBot;
+﻿using System.Diagnostics;
+
+namespace PromisedLandDSPBot;
 using Newtonsoft.Json;
 // todo add error handling in case of IO exception.
-class Config
+internal class Config
 {
-    internal class Context
+    //Jerry, do NOT make this public, its encapsulated for a reason.
+    internal class Token
     {
-        public string Token = null!;
-
+        internal string value;
     }
-
-    public static Context ReadConfig(string path = "config.json")
+    
+    public static void SetToken(Token token, string path = "config.json")
     {
-        if (File.Exists(path))
-        {
-            File.ReadAllText(path);
-            var deserializeObject = JsonConvert.DeserializeObject<Context>(File.ReadAllText(path));
-            
-            // in case the file read in is not able to be deserialized properly, we ask to remake the config
-            // - as the only reason it should fail is either a malformed JSON or other such problem.
-            if (deserializeObject == null)
-            {
-                return CreateConfig(path);
-            }
-            return (Context) deserializeObject;
-        }
-        else
-        {
-            return CreateConfig(path);
-        }
+        //read content from disk
+        var json = File.ReadAllText(path);
+        
+        //deserialize content
+        var value = JsonConvert.DeserializeObject<Token>(json);
+        
+        //set new value
+        value = token;
+        
+        //write new value to disk
+        File.WriteAllText(path, JsonConvert.SerializeObject(value));
     }
-
-    private static Context CreateConfig(string path)
+    
+    public static string GetToken(string path = "config.json")
     {
-        Console.Write("please input your bot token: ");
-        var ctx = new Context()
-        {
-            Token = Console.ReadLine()!
-        };
-        //Console.WriteLine(ctx.Token);
-        File.WriteAllText(path, JsonConvert.SerializeObject(ctx));
-        return ctx;
+        //read content from disk
+        var json = File.ReadAllText(path);
+        
+        //deserialize content
+        var deserializeObject = JsonConvert.DeserializeObject<Token>(json);
+        
+        //instantiate token class
+        var token = new Token();
+
+        //return value of token class
+        return token.value;
     }
 }
