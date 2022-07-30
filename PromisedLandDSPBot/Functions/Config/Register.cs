@@ -1,4 +1,8 @@
-﻿namespace PromisedLandDSPBot.Functions.Config;
+﻿using System;
+using litedbasync.Utils;
+using LiteDB;
+
+namespace PromisedLandDSPBot.Functions.Config;
 
 public class Register
 {

@@ -27,13 +27,14 @@ public class Logger
     /// <summary>
     /// class structure containing the prefab for an event, used in serialization by LiteDB  
     /// </summary>
-    class Event
+    class MyEvent
     {
-        internal Type Type;
-        internal string Description;
-        internal ulong Id;
-        internal ulong Guild;
-        internal ulong Channel;
+        public Type Type { get; internal set; }
+        public string Description { get; internal set;}
+        public long Id { get; } = 0;
+        public ulong Guild { get; internal set;}
+        public ulong Channel { get; internal set;}
+        public DateTime Date { get; internal set;}// for filtering if needed. 
     }
     
     /// <summary>
@@ -47,45 +48,88 @@ public class Logger
     {
         //get event table (no, this cannot be done statically, causes race condition if a single ILiteCollectionAsync is
         //access twice per instance 
-        var events = LiteDatabase.GetCollection<Event>("Events");
-
+        var events = LiteDatabase.GetCollection<MyEvent>("Events");
+        
         // create event object
-        var @event = new Event
+        var @event = new MyEvent
         {
             Channel = ctx.Channel.Id,
             Guild = ctx.Guild.Id,
             Description = description,
-            Id = (ulong)BsonAutoId.Int64,
-            Type = type
+            Type = type,
+            Date = DateTime.Now
         };
         
         // if print to console was specified 
         if(console) Console.WriteLine($"[{type}] @{System.DateTime.Now} {description}");
         
         // register event
-        events.UpsertAsync(@event);
+        events.EnsureIndexAsync(x => x.Id, true);
+        events.InsertAsync(@event);
+        
+
     }
     
+    /// <summary>
+    /// create, serialize and writes and event to an internal database, if specified also logs to console.
+    /// </summary>
+    /// <param name="type">the type of event that has been logged</param>
+    /// <param name="description">a human readable description of the event</param>
+    /// <param name="console">if the event should be written to console, defaults to false</param>
     public static void Log(Type type, string description, bool console = false)
     {
         //get event table (no, this cannot be done statically, causes race condition if a single ILiteCollectionAsync is
         //access twice per instance 
-        var events = LiteDatabase.GetCollection<Event>("Events");
+        var events = LiteDatabase.GetCollection<MyEvent>("Events");
 
         // create event object
-        var @event = new Event
+        var @event = new MyEvent
         {
             //Channel = ctx.Channel.Id,
             //Guild = ctx.Guild.Id,
             Description = description,
-            Id = (ulong)BsonAutoId.Int64,
-            Type = type
+            Type = type,
+            Date = DateTime.Now
         };
         
         // if print to console was specified 
         if(console) Console.WriteLine($"[{type}] @{System.DateTime.Now} {description}");
+
+        // register event
+        events.EnsureIndexAsync(x => x.Id, true);
+        events.InsertAsync(@event);
+        
+    }
+
+    
+    /// <summary>
+    /// create, serialize and writes and event to an internal database, if specified also logs to console.
+    /// </summary>
+    /// <param name="type">the type of event that has been logged</param>
+    /// <param name="description">a human readable description of the event</param>
+    /// <param name="channelId"></param>
+    /// <param name="guildId"></param>
+    /// <param name="console">if the event should be written to console, defaults to false</param>
+    public static void Log(Type type, string description, ulong channelId, ulong guildId, bool console = false)
+    {
+        // Some events triggered by the system don't provide a context object, just a sender and arguments.
+        // To promote the ability to log all events, a constructor for the details manually is made here.
+        var events = LiteDatabase.GetCollection<MyEvent>("Events");
+        // create event object.
+        var @event = new MyEvent()
+        {
+            Channel = channelId,
+            Guild = guildId,
+            Description = description,
+            Type = type,
+            Date = DateTime.Now
+        };
+        // if print to console was specified
+        if (console) Console.WriteLine($"[{type}] @{System.DateTime.Now} {description}");
         
         // register event
-        events.UpsertAsync(@event);
+        events.EnsureIndexAsync(x => x.Id, true);
+        events.InsertAsync(@event);
+        
     }
 }

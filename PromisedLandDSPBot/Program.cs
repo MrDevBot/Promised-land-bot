@@ -60,8 +60,9 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             var commands = _client.UseCommandsNext(CommandConfig);
             commands.RegisterCommands<Modules.Admin.Module.Base>();
             commands.RegisterCommands<Modules.Debug.Module.Base>();
-            commands.RegisterCommands<Modules.Reactions.Module.Base>();
-            commands.RegisterCommands<Modules.Tickets.Module.Base>();
+            // You can't enable empty command groups for CommandNext's - it causes an error.  "ArgumentNullException"
+            //commands.RegisterCommands<Modules.Reactions.Module.Base>();
+            //commands.RegisterCommands<Modules.Tickets.Module.Base>();
             //commands.RegisteredCommands<Modules.Triggers.Module.Base>();
             commands.CommandErrored += Events.CommandsOnCommandErrored;
             

@@ -60,8 +60,8 @@ public class Module
         {
             var response = new DiscordInteractionResponseBuilder();
             response
-                .WithTitle("Super cool modal!")
-                .WithCustomId("my-modal")
+                .WithTitle(title)
+                .WithCustomId("my-modal-test")
                 .AddComponents(new TextInputComponent(label: "Favorite food", customId: "fav-food",
                     placeholder: "Pizza, Icecream, etc", max_length: 30))
                 .AddComponents(new TextInputComponent("Why?", "why-fav", "Because it tastes good", required: false,
