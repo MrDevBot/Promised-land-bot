@@ -57,8 +57,16 @@ public class Events
                 break;
             default:
                 await dc.SendMessageAsync(
-                    $"Hi {m.Username}... So uh.... there seems to be a problem in paradise... Please contact a bot administrator....");
+                    $"sorry {m.Mention}, an error occured while trying to execute your command");
                 break;
         }
+    }
+    
+    internal static Task GuildDiscovered(DiscordClient sender, GuildCreateEventArgs e)
+    {
+        Console.WriteLine(Config.Whitelist.Get().Result.Contains(e.Guild.Id)
+            ? $"[ENFORCER] {e.Guild.Name} [{e.Guild.Id}] [SUCCESS]"
+            : $"[ENFORCER] {e.Guild.Name} [{e.Guild.Id}] [FAILED]");
+        return Task.CompletedTask;
     }
 }

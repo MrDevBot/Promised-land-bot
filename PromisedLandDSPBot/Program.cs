@@ -1,5 +1,4 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.SlashCommands;
 
 namespace PromisedLandDSPBot // Note: actual namespace depends on the project name.
@@ -8,23 +7,31 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
     internal static class Program
     {
         private static DiscordConfiguration? _config;
-
+        
+        /*
         private static readonly CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration()
         {
-            StringPrefixes = new[] {">"}
+            StringPrefixes = new[] {">", "//"}
         };
+        */
         
         private static DiscordClient? _client;
 
 
-        private static void Main()
+        private static async Task Main()
         {
+            await Config.Whitelist.Add(476730054890618892);
+            await Config.Whitelist.Add(962968548072906783);
+            
+            
+            
             var token = Config.GetToken();
+
             Console.WriteLine("Bot Init...");
 
             _config = new DiscordConfiguration()
             {
-                Token = token,
+                Token = token.Result,
                 TokenType = TokenType.Bot, // How the bots API access is defined. (Leave as is)
                 Intents = DiscordIntents.Guilds 
                           | DiscordIntents.GuildEmojis 
@@ -54,16 +61,17 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             // event handlers are added in-scope here - for instance:
 
             //_client.MessageCreated += OnMessage;
+            _client.GuildAvailable += Events.GuildDiscovered;
             
             // add custom handlers handlers - for base command handlers, if the group is empty, comment it out. :thanks: 
             
-            var commands = _client.UseCommandsNext(CommandConfig);
-            commands.RegisterCommands<Modules.Admin.Module.Base>();
-            commands.RegisterCommands<Modules.Debug.Module.Base>();
-            commands.RegisterCommands<Modules.Reactions.Module.Base>();
-            commands.RegisterCommands<Modules.Tickets.Module.Base>();
+            //var commands = _client.UseCommandsNext(CommandConfig);
+            //commands.RegisterCommands<Modules.Admin.Module.Base>();
+            //commands.RegisterCommands<Modules.Debug.Module.Base>();
+            //commands.RegisterCommands<Modules.Reactions.Module.Base>();
+            //commands.RegisterCommands<Modules.Tickets.Module.Base>();
             //commands.RegisteredCommands<Modules.Triggers.Module.Base>();
-            commands.CommandErrored += Events.CommandsOnCommandErrored;
+            //commands.CommandErrored += Events.CommandsOnCommandErrored;
             
             //Log(Logger.Type.Debug, "Registered Legacy Commands");
             

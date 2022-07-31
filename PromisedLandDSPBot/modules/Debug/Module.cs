@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using static System.Reflection.Assembly;
 
 namespace PromisedLandDSPBot.Modules.Debug;
 /// <summary>
@@ -11,45 +12,38 @@ namespace PromisedLandDSPBot.Modules.Debug;
 public class Module
 {
     //slash command implementations
-    [SlashCommandGroup("debug", "Debug Functions - Special Access Only"),
-     RequireRoles(RoleCheckMode.All,
-         983462019250421800)]
+    [SlashCommandGroup("info", "Debug Functions - Special Access Only")]
     public class Slash : ApplicationCommandModule
     {
-        [SlashCommand("ping", "The bot will let you know.")]
+        [SlashCommand("ping", "the latency between the bot and discord")]
         public async Task Ping(InteractionContext ctx)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().WithContent($":ping_pong: Pong! {ctx.Client.Ping}ms"));
         }
         
-        [SlashCommand("embedtest", "Made to test how embeds work in this framework."),
-         RequirePermissions(Permissions.SendMessages)]
-        //[RequireOwner] // this is owner of the bot, not owner of the server - so only the person who made the bot on the developer portal can access these commands.
-        public async Task EmbedTestCommand(InteractionContext ctx,
-            [Option("content", "This is the content of your embed post.")] string embedContent = "UNSET")
+        [SlashCommand("about", "general information about the bot")]
+        public async Task About(InteractionContext ctx)
         {
-            // CreateResponseAsync has a few overloads... one which helps here is shown below.
             var de = new DiscordEmbedBuilder()
                 {
                     Color = DiscordColor.Blurple,
                     Author = new DiscordEmbedBuilder.EmbedAuthor()
                     {
-                        IconUrl = ctx.Member.AvatarUrl,
-                        Name = ctx.Member.DisplayName,
-                        //rl = ctx.Member.Username
+                        IconUrl = ctx.Client.CurrentUser.AvatarUrl,
+                        Name = ctx.Client.CurrentUser.Username,
                     },
-                    Title = "Embed Test",
-                    Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = ctx.Token },
-
-
+                    Title = $"About {Constants.Name}", Description = $"{Constants.Description}",
+                    Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"Application ID: {ctx.Client.CurrentApplication.Name}" }
                 }
-                .AddField("Content", $"{embedContent}")
-                .AddField("Not In Line", "New Content Zone", true)
-                .AddField("In Line", "This is in line", true)
+                .AddField("Entry Point", $"`{GetExecutingAssembly().EntryPoint!.Name}`", true)
+                .AddField("Loaded Modules", $"{GetExecutingAssembly().Modules.Aggregate(string.Empty, (current, module) => $"{current}\n`{module}`")}", true)
+                .AddField("Developers", Constants.Developers.Aggregate(string.Empty, (current, developer) => $"{current}\n{developer}"), true)
+                .AddField("Version", Constants.Version, true)
+                //.AddField("In Line", "This is in line", true)
                 .Build();
-
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+            
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                 new DiscordInteractionResponseBuilder().AddEmbed(de));
         }
 
@@ -75,7 +69,7 @@ public class Module
     }
 
     //legacy command implementations
-    [Group("debug")]
+    [Group("info")]
     public class Base : BaseCommandModule
     {
         [Command("ping")]

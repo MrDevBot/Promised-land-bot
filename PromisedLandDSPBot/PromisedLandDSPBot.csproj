@@ -17,4 +17,8 @@
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Modules\SlashCommandModule1.cs" />
+    </ItemGroup>
+
 </Project>
