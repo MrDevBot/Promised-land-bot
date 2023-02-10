@@ -9,6 +9,7 @@ namespace PromisedLandDSPBot
 {
     internal static class Program
     {
+        private const string Module = "BOOT";
         private static void SeriLog()
         {
             SelfLog.Enable(message => Trace.WriteLine($"INTERNAL ERROR: {message}"));
@@ -19,7 +20,7 @@ namespace PromisedLandDSPBot
                 .WriteTo.File("Logs/log-.log", rollingInterval: RollingInterval.Day)
                 .CreateLogger();
         
-            Log.Information("[{Name}] serilog sink started", "Logger");
+            Log.Information("[{Name}] serilog sink started", "LOGGER");
         }
         
         public static Persistence.Config Config = new();
@@ -31,18 +32,18 @@ namespace PromisedLandDSPBot
         {
             SeriLog();
             
-            Log.Information("[{Name}] checking for existence of token in config", Constants.Name);
+            Log.Information("[{Name}][{Module}] checking for existence of token in config", Constants.Name, Module);
             if (Config.Exists("token"))
             {
-                Log.Information("[{Name}] token located", Constants.Name);
+                Log.Information("[{Name}][{Module}] token located", Constants.Name, Module);
             }
             else
             {
-                Log.Information("[{Name}] failed to locate token in config, requesting user input", Constants.Name);
+                Log.Information("[{Name}][{Module}] failed to locate token in config, requesting user input", Constants.Name, Module);
                 Console.WriteLine("Please enter your bot token:");
                 string token = Console.ReadLine();
                 Config.Set("token", token);
-                Log.Information("[{Name}] token has been updated in config, token is now {Token}", Constants.Name, token);
+                Log.Information("[{Name}][{Module}] token has been updated in config, token is now {Token}", Constants.Name, Module, token);
             }
             
 
@@ -52,7 +53,7 @@ namespace PromisedLandDSPBot
 
             //var token = Config.GetToken();
 
-            Log.Information("[{Name}] attempting connection to discord api", Constants.Name);
+            Log.Information("[{Name}][{Module}] attempting connection to discord api", Constants.Name, Module);
 
             _discordConfig = new DiscordConfiguration()
             {
@@ -68,7 +69,7 @@ namespace PromisedLandDSPBot
                 MinimumLogLevel = LogLevel.Warning
             };
             
-            Log.Information("[{Name}] discord config is now instantiated", Constants.Name);
+            Log.Information("[{Name}][{Module}] discord config is now instantiated", Constants.Name, Module);
 
             MainBotLoop().GetAwaiter().GetResult();
         }
@@ -77,21 +78,21 @@ namespace PromisedLandDSPBot
         {
             _client = new DiscordClient(_discordConfig);
             
-            Log.Information("[{Name}] discord client is now instantiated", Constants.Name);
+            Log.Information("[{Name}][{Module}] discord client is now instantiated", Constants.Name, Module);
             
             
-            Log.Information("[{Name}] hooking events", Constants.Name);
+            Log.Information("[{Name}][{Module}] hooking events", Constants.Name, Module);
             // event handlers are added in-scope here - for instance:
             //_client.MessageCreated += OnMessage;
             
-            Log.Information("[{Name}] hooked GuildDiscovered event", Constants.Name);
+            Log.Information("[{Name}][{Module}] hooked GuildDiscovered event", Constants.Name, Module);
             _client.GuildAvailable += Events.GuildDiscovered;
             
             
-            Log.Information("[{Name}] registering command modules", Constants.Name);
+            Log.Information("[{Name}][{Module}] registering command modules", Constants.Name, Module);
             // add custom handlers handlers - for base command handlers, if the group is empty, comment it out. :thanks: 
             
-            Log.Warning("[{Name}] text commands marked obsolete, text commands have been disabled", Constants.Name);
+            Log.Warning("[{Name}][{Module}] text commands marked obsolete, text commands have been disabled", Constants.Name, Module);
             //var commands = _client.UseCommandsNext(CommandConfig);
             //commands.RegisterCommands<Modules.Admin.Module.Base>();
             //commands.RegisterCommands<Modules.Debug.Module.Base>();
@@ -102,32 +103,32 @@ namespace PromisedLandDSPBot
 
             var slash = _client.UseSlashCommands();
             
-            Log.Information("[{Name}] registering {Modules}", Constants.Name, "modules.admin");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.admin");
             slash.RegisterCommands<Modules.Admin.Module.Slash>();
             
-            Log.Information("[{Name}] registering {Modules}", Constants.Name, "modules.debug");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.debug");
             slash.RegisterCommands<Modules.Debug.Module.Slash>();
             
-            Log.Information("[{Name}] registering {Modules}", Constants.Name, "modules.reactions");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.reactions");
             slash.RegisterCommands<Modules.Reactions.Module.Slash>();
             
-            Log.Information("[{Name}] registering {Modules}", Constants.Name, "modules.tickets");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.tickets");
             slash.RegisterCommands<Modules.Tickets.Module.Slash>();
             
-            Log.Information("[{Name}] registering {Modules}", Constants.Name, "modules.triggers");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.triggers");
             slash.RegisterCommands<Modules.Triggers.Module.Slash>();
             
-            Log.Information("[{Name}] hooked {Event}", Constants.Name, "SlashOnSlashCommandErrored");
+            Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "SlashOnSlashCommandErrored");
             slash.SlashCommandErrored += Events.SlashOnSlashCommandErrored;
             
-            Log.Information("[{Name}] hooked {Event}", Constants.Name, "ClientOnModalSubmitted");
+            Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "ClientOnModalSubmitted");
             _client.ModalSubmitted += Events.ClientOnModalSubmitted;
 
-            Log.Information("[{Name}] finished registering modules", Constants.Name);
+            Log.Information("[{Name}][{Module}] finished registering modules", Constants.Name, Module);
 
-            Log.Information("[{Name}] attempting to authenticate with discord", Constants.Name);
+            Log.Information("[{Name}][{Module}] attempting to authenticate with discord", Constants.Name, Module);
             await _client.ConnectAsync();
-            Log.Information("[{Name}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Constants.Name, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
+            Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Constants.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
             
             await Task.Delay(-1); // so the process doesn't end.
         }
