@@ -56,7 +56,7 @@ public class Events
                 break;
             case InvalidOperationException:
                 await dc.SendMessageAsync(
-                    $"$Hi {m.Username}, you attempted to perform an invalid command. This may be because the"+
+                    $"${m.Username}, you attempted to perform an invalid command. This may be because the"+
                     " command is not fully implemented. Please contact a bot administrator.");
                 break;
             default:
