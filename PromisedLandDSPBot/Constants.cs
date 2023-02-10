@@ -9,4 +9,6 @@ public class Constants
     public static readonly string[] Developers = new []{"@JerryPlayz101#3209", "@The Redneck Agenda#6754", "@Brán(raven)#5895"};
 
     public const string Version = "Indev Build 23, Electric Boogaloo";
+    public const ulong Permissions = 276421413911; // generate using https://discordapi.com/permissions.html
+
 }
