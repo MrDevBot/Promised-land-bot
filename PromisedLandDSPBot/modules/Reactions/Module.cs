@@ -11,11 +11,4 @@ public class Module
     public class Slash : ApplicationCommandModule
     {
     }
-
-    //legacy command implementations
-    [Group("reactionrole")]
-    public class Base : BaseCommandModule
-    {
-
-    }
 }

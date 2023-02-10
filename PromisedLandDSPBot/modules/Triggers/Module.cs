@@ -12,11 +12,4 @@ public class Module
     {
         
     }
-
-    //legacy command implementations
-    [Group("trigger")]
-    public class Base : BaseCommandModule
-    {
-
-    }
 }
