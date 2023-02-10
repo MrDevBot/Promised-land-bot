@@ -45,11 +45,6 @@ namespace PromisedLandDSPBot
                 Config.Set("token", token);
                 Log.Information("[{Name}][{Module}] token has been updated in config, token is now {Token}", Constants.Name, Module, token);
             }
-            
-
-            // Change the token value
-            //(token as dynamic).Token = "ODEwNTMzNjA1OTIyNTcwMzAw.GMHfq1.s5ScyPvEO94RtA8wj5myOfsca-8Pb0Z7xSNV4s";
-
 
             //var token = Config.GetToken();
 
