@@ -6,7 +6,8 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
     // Program Entry
     internal static class Program
     {
-        private static DiscordConfiguration? _config;
+        public static Persistence.Config Config = new();
+        private static DiscordConfiguration? _discordConfig;
         
         /*
         private static readonly CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration()
@@ -20,18 +21,29 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
 
         private static async Task Main()
         {
-            await Config.Whitelist.Add(476730054890618892);
-            await Config.Whitelist.Add(962968548072906783);
+            if (Config.Exists("token"))
+            {
+                string token = Config.Get("token");
+            }
+            else
+            {
+                Console.WriteLine("Please enter your bot token:");
+                string token = Console.ReadLine();
+                Config.Set("token", token);
+            }
             
-            
-            
-            var token = Config.GetToken();
+
+            // Change the token value
+            //(token as dynamic).Token = "ODEwNTMzNjA1OTIyNTcwMzAw.GMHfq1.s5ScyPvEO94RtA8wj5myOfsca-8Pb0Z7xSNV4s";
+
+
+            //var token = Config.GetToken();
 
             Console.WriteLine("Bot Init...");
 
-            _config = new DiscordConfiguration()
+            _discordConfig = new DiscordConfiguration()
             {
-                Token = token.Result,
+                Token = Config.Get("token"),
                 TokenType = TokenType.Bot, // How the bots API access is defined. (Leave as is)
                 Intents = DiscordIntents.Guilds 
                           | DiscordIntents.GuildEmojis 
@@ -54,7 +66,7 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
         /// </summary>
         private static async Task MainBotLoop()
         {
-            _client = new DiscordClient(_config);
+            _client = new DiscordClient(_discordConfig);
             
             //Log(Logger.Type.Debug, "Instantiated Client Object");
             Console.WriteLine("Instantiated Client Object");

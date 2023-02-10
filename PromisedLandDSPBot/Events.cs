@@ -64,9 +64,11 @@ public class Events
     
     internal static Task GuildDiscovered(DiscordClient sender, GuildCreateEventArgs e)
     {
+        /*
         Console.WriteLine(Config.Whitelist.Get().Result.Contains(e.Guild.Id)
             ? $"[ENFORCER] {e.Guild.Name} [{e.Guild.Id}] [SUCCESS]"
-            : $"[ENFORCER] {e.Guild.Name} [{e.Guild.Id}] [FAILED]");
+            : $"[ENFORCER] ] [FAILED]");
+            */
         return Task.CompletedTask;
     }
 }
