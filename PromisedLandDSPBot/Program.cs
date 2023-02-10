@@ -1,38 +1,64 @@
-﻿using DSharpPlus;
+﻿using System.Diagnostics;
+using DSharpPlus;
 using DSharpPlus.SlashCommands;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Debugging;
 
-namespace PromisedLandDSPBot // Note: actual namespace depends on the project name.
+namespace PromisedLandDSPBot
 {
-    // Program Entry
     internal static class Program
     {
-        private static DiscordConfiguration? _config;
-        
-        /*
-        private static readonly CommandsNextConfiguration CommandConfig = new CommandsNextConfiguration()
+        private const string Module = "BOOT";
+        private static void SeriLog()
         {
-            StringPrefixes = new[] {">", "//"}
-        };
-        */
+            SelfLog.Enable(message => Trace.WriteLine($"INTERNAL ERROR: {message}"));
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.Console()
+                .WriteTo.File("Logs/log-.log", rollingInterval: RollingInterval.Day)
+                .CreateLogger();
         
+            Log.Information("[{Name}] serilog sink started", "LOGGER");
+        }
+        
+        public static Persistence.Config Config = new();
+        private static DiscordConfiguration? _discordConfig;
+
         private static DiscordClient? _client;
-
-
+        
         private static async Task Main()
         {
-            await Config.Whitelist.Add(476730054890618892);
-            await Config.Whitelist.Add(962968548072906783);
+            SeriLog();
             
-            
-            
-            var token = Config.GetToken();
-
-            Console.WriteLine("Bot Init...");
-
-            _config = new DiscordConfiguration()
+            Log.Information("[{Name}][{Module}] checking for existence of token in config", Constants.Name, Module);
+            if (Config.Exists("token"))
             {
-                Token = token.Result,
-                TokenType = TokenType.Bot, // How the bots API access is defined. (Leave as is)
+                Log.Information("[{Name}][{Module}] token located", Constants.Name, Module);
+            }
+            else
+            {
+                Log.Information("[{Name}][{Module}] failed to locate token in config, requesting user input", Constants.Name, Module);
+                Console.WriteLine("Please enter your bot token:");
+                string token = Console.ReadLine();
+                Config.Set("token", token);
+                Log.Information("[{Name}][{Module}] token has been updated in config, token is now {Token}", Constants.Name, Module, token);
+            }
+            
+
+            // Change the token value
+            //(token as dynamic).Token = "ODEwNTMzNjA1OTIyNTcwMzAw.GMHfq1.s5ScyPvEO94RtA8wj5myOfsca-8Pb0Z7xSNV4s";
+
+
+            //var token = Config.GetToken();
+
+            Log.Information("[{Name}][{Module}] attempting connection to discord api", Constants.Name, Module);
+
+            _discordConfig = new DiscordConfiguration()
+            {
+                Token = Config.Get("token"),
+                TokenType = TokenType.Bot,
                 Intents = DiscordIntents.Guilds 
                           | DiscordIntents.GuildEmojis 
                           | DiscordIntents.GuildMembers 
@@ -40,31 +66,33 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
                           | DiscordIntents.DirectMessages
                           | DiscordIntents.AllUnprivileged,
                           // Remember to add these on the bot page!
-                //Intents = DiscordIntents.AllUnprivileged
+                MinimumLogLevel = LogLevel.Warning
             };
             
-            //Log(Logger.Type.Debug, "Main Loop Achieved");
-            Console.WriteLine("MainLoopAwait...");
-            
+            Log.Information("[{Name}][{Module}] discord config is now instantiated", Constants.Name, Module);
+
             MainBotLoop().GetAwaiter().GetResult();
         }
-
-        /// <summary>
-        /// Main Bot Loop - this is where we initiate the bot client and handle initialisation stuff
-        /// </summary>
+        
         private static async Task MainBotLoop()
         {
-            _client = new DiscordClient(_config);
+            _client = new DiscordClient(_discordConfig);
             
-            //Log(Logger.Type.Debug, "Instantiated Client Object");
-            Console.WriteLine("Instantiated Client Object");
+            Log.Information("[{Name}][{Module}] discord client is now instantiated", Constants.Name, Module);
+            
+            
+            Log.Information("[{Name}][{Module}] hooking events", Constants.Name, Module);
             // event handlers are added in-scope here - for instance:
-
             //_client.MessageCreated += OnMessage;
+            
+            Log.Information("[{Name}][{Module}] hooked GuildDiscovered event", Constants.Name, Module);
             _client.GuildAvailable += Events.GuildDiscovered;
             
+            
+            Log.Information("[{Name}][{Module}] registering command modules", Constants.Name, Module);
             // add custom handlers handlers - for base command handlers, if the group is empty, comment it out. :thanks: 
             
+            Log.Warning("[{Name}][{Module}] text commands marked obsolete, text commands have been disabled", Constants.Name, Module);
             //var commands = _client.UseCommandsNext(CommandConfig);
             //commands.RegisterCommands<Modules.Admin.Module.Base>();
             //commands.RegisterCommands<Modules.Debug.Module.Base>();
@@ -72,32 +100,36 @@ namespace PromisedLandDSPBot // Note: actual namespace depends on the project na
             //commands.RegisterCommands<Modules.Tickets.Module.Base>();
             //commands.RegisteredCommands<Modules.Triggers.Module.Base>();
             //commands.CommandErrored += Events.CommandsOnCommandErrored;
-            
-            //Log(Logger.Type.Debug, "Registered Legacy Commands");
-            
-            // add slash command handlers
+
             var slash = _client.UseSlashCommands();
+            
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.admin");
             slash.RegisterCommands<Modules.Admin.Module.Slash>();
+            
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.debug");
             slash.RegisterCommands<Modules.Debug.Module.Slash>();
+            
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.reactions");
             slash.RegisterCommands<Modules.Reactions.Module.Slash>();
+            
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.tickets");
             slash.RegisterCommands<Modules.Tickets.Module.Slash>();
+            
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.triggers");
             slash.RegisterCommands<Modules.Triggers.Module.Slash>();
+            
+            Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "SlashOnSlashCommandErrored");
             slash.SlashCommandErrored += Events.SlashOnSlashCommandErrored;
             
-            //Log(Logger.Type.Debug, "Registered Slash Commands");
-            
-            
-            // hook modal submitted stuffs
+            Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "ClientOnModalSubmitted");
             _client.ModalSubmitted += Events.ClientOnModalSubmitted;
 
-            Console.WriteLine("Modules added successfully!");
-            
-            // login to client and await this success.
-            Console.WriteLine("Attempting Login...");
+            Log.Information("[{Name}][{Module}] finished registering modules", Constants.Name, Module);
+
+            Log.Information("[{Name}][{Module}] attempting to authenticate with discord", Constants.Name, Module);
             await _client.ConnectAsync();
-            //Log(Logger.Type.Debug, "Connected to Discord");
+            Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Constants.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
             
-            Console.WriteLine("Login Complete!");
             await Task.Delay(-1); // so the process doesn't end.
         }
     }

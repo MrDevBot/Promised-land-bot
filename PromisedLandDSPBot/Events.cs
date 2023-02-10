@@ -5,13 +5,16 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
+using Serilog;
 
 namespace PromisedLandDSPBot;
 
 public class Events
 {
+    private const string Module = "EVENTS";
     internal static Task ClientOnModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
     {
+        Log.Information("[{Name}][{Module}] ClientOnModalSubmitted event triggered by NOT IMPLEMENTED", Constants.Name, Module);
         // Check modal id - if "suggestion-XXXX", delegate to a handler.
         //throw new NotImplementedException();
         return null;
@@ -19,14 +22,15 @@ public class Events
 
     internal static async Task CommandsOnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
-        Console.WriteLine($"\nNormal Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.Command} was the culprit.");
+        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", Constants.Name, Module, e.Command.Name, e.Command.Module.ModuleType.Name, e.Exception.ToString());
+
         await OnErrorChannelReport(e.Context.Member, e.Context.Channel, e.Exception);
-        //throw new NotImplementedException();
     }
 
     internal static async Task SlashOnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
-        Console.WriteLine($"Slash Command Error: \n{e.Exception.ToString()}\n\n and {e.Context.CommandName} was the culprit.");
+        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", Constants.Name, Module, e.Context.CommandName, e.Context.SlashCommandsExtension.ToString(), e.Exception.ToString());
+
         await OnErrorChannelReport(e.Context.Member, e.Context.Channel, e.Exception);
         //throw new NotImplementedException();
     }
@@ -64,9 +68,7 @@ public class Events
     
     internal static Task GuildDiscovered(DiscordClient sender, GuildCreateEventArgs e)
     {
-        Console.WriteLine(Config.Whitelist.Get().Result.Contains(e.Guild.Id)
-            ? $"[ENFORCER] {e.Guild.Name} [{e.Guild.Id}] [SUCCESS]"
-            : $"[ENFORCER] {e.Guild.Name} [{e.Guild.Id}] [FAILED]");
+        Log.Information("[{Name}][{Module}] discovered guild {Guild} with Id {Id}", Constants.Name, Module, e.Guild.Name, e.Guild.Id.ToString());
         return Task.CompletedTask;
     }
 }
