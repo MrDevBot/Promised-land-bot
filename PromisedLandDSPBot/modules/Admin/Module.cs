@@ -79,10 +79,4 @@ public class Module
             }
         }
     }
-
-    //legacy command implementations
-    [Group("sudo")]
-    public class Base : BaseCommandModule
-    {
-    }
 }

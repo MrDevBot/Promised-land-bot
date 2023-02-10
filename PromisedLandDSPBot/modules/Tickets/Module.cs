@@ -45,10 +45,4 @@ public class Module
             await ctx.CreateResponseAsync(InteractionResponseType.Modal, response);
         }
     }
-
-    //legacy command implementations
-    [Group("ticket")]
-    public class Base : BaseCommandModule
-    {
-    }
 }

@@ -67,38 +67,4 @@ public class Module
 
         
     }
-
-    //legacy command implementations
-    [Group("info")]
-    public class Base : BaseCommandModule
-    {
-        [Command("ping")]
-        public async Task Ping(CommandContext ctx) // ADD command parameters as if they are parameters in code. 
-        {
-            await ctx.RespondAsync($":ping_pong: Pong! {ctx.Client.Ping}ms");
-        }
-        
-        [Command("debug")]
-        public async Task Debug(CommandContext ctx) // ADD command parameters as if they are parameters in code. 
-        {
-            var embedBuilder = new DiscordEmbedBuilder
-            {
-                Author = new DiscordEmbedBuilder.EmbedAuthor()
-                {
-                    IconUrl = ctx.Client.CurrentUser.AvatarUrl,
-                    Name = ctx.Client.CurrentUser.Username,
-                    Url = ""
-                },
-                Color = new Optional<DiscordColor>(DiscordColor.Orange),
-                Description = string.Empty,
-                Timestamp = DateTimeOffset.UtcNow
-            };
-
-            embedBuilder.AddField("OS", Environment.OSVersion.VersionString, true);
-            embedBuilder.AddField("CLR", Environment.Version.ToString(), true);
-            embedBuilder.AddField("Stacktrace", Environment.StackTrace, false);
-
-            await ctx.RespondAsync(embedBuilder.Build());
-        }
-    }
 }

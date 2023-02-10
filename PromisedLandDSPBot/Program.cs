@@ -125,6 +125,13 @@ namespace PromisedLandDSPBot
             await _client.ConnectAsync();
             Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Constants.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
             
+            // generate invite link for bot
+            Log.Information("[{Name}][{Module}] generating invite link for bot", Constants.Name, Module);
+            
+            string link =
+                $"https://discord.com/oauth2/authorize?client_id={_client.CurrentApplication.Id}&scope=bot&permissions={Constants.Permissions}";
+            Log.Information("[{Name}][{Module}] invite link for bot is {Link}", Constants.Name, Module, link);
+            
             await Task.Delay(-1); // so the process doesn't end.
         }
     }
