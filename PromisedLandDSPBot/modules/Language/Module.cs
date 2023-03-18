@@ -9,6 +9,7 @@ using LiteDB;
 using LiteDB.Async;
 using OpenAI;
 using OpenAI.Chat;
+using PromisedLandDSPBot.Functions.Permissions;
 using Serilog;
 using static System.Reflection.Assembly;
 
@@ -121,6 +122,8 @@ public class Module
         [SlashCommand("poke", "prompt the bot to respond to the ongoing conversation")]
         public async Task Poke(InteractionContext ctx)
         {
+            Checks.RejectDM(ctx);
+            
             if (!ctx.Client.CurrentApplication.Owners.Contains(ctx.User))
             {
                 await ctx.CreateResponseAsync(":warning: this command is currently locked to developers only. you are not a registered developer of this application.", true);
