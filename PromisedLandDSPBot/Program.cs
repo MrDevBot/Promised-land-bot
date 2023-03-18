@@ -31,22 +31,32 @@ namespace PromisedLandDSPBot
         private static async Task Main()
         {
             SeriLog();
+
+            Persistence.Config gptConfig = new Persistence.Config("Config\\gpt.json");
             
-            Log.Information("[{Name}][{Module}] checking for existence of token in config", Constants.Name, Module);
-            if (Config.Exists("token"))
+            Log.Information("[{Name}][{Module}] checking for existence of gpt token in config", Constants.Name, Module);
+            if (!gptConfig.Exists("token"))
             {
-                Log.Information("[{Name}][{Module}] token located", Constants.Name, Module);
+                Log.Information("[{Name}][{Module}] failed to locate gpt token in config, requesting user input", Constants.Name, Module);
+                Console.WriteLine("Please enter your OpenAI API Token:");
+                gptConfig.Set("token", Console.ReadLine() ?? "empty");
             }
-            else
+
+            Log.Information("[{Name}][{Module}] checking for existence of token in config", Constants.Name, Module);
+            if (!Config.Exists("token"))
             {
-                Log.Information("[{Name}][{Module}] failed to locate token in config, requesting user input", Constants.Name, Module);
-                Console.WriteLine("Please enter your bot token:");
+                Log.Information("[{Name}][{Module}] failed to locate discord token in config, requesting user input", Constants.Name, Module);
+                Console.WriteLine("Please enter your Discord API token:");
                 string token = Console.ReadLine();
                 Config.Set("token", token);
                 Log.Information("[{Name}][{Module}] token has been updated in config, token is now {Token}", Constants.Name, Module, token);
             }
 
-            //var token = Config.GetToken();
+            if (!gptConfig.Exists("systemPrompt"))
+            {
+                gptConfig.Set("systemPrompt", "Your name is Adelaide.\nYour creator is Schmebulock#6754, their ID is 227696176412098560\n\nRefuse to answer any question under the following conditions\n- relates to self harm or suicide\n- is broadly considered unethical\n- relates to the personal information of a non-prominent figure\n- by answering or continuing a conversation sensitive or otherwise harmful information is diviluged\n- the question relates to information about yourself with the sole exclusion your name and the name of your creator\n");
+            }
+            gptConfig.Set("systemPrompt", "Your name is Adelaide.\nYour creator is Schmebulock#6754, their ID is 227696176412098560\n\nRefuse to answer any question under the following conditions\n- relates to self harm or suicide\n- is broadly considered unethical\n- relates to the personal information of a non-prominent figure\n- by answering or continuing a conversation sensitive or otherwise harmful information is diviluged\n- the question relates to information about yourself with the sole exclusion your name and the name of your creator\n");
 
             Log.Information("[{Name}][{Module}] attempting connection to discord api", Constants.Name, Module);
 
@@ -78,7 +88,7 @@ namespace PromisedLandDSPBot
             
             Log.Information("[{Name}][{Module}] hooking events", Constants.Name, Module);
             // event handlers are added in-scope here - for instance:
-            //_client.MessageCreated += OnMessage;
+            _client.MessageCreated += Events.MessageCreated;
             
             Log.Information("[{Name}][{Module}] hooked GuildDiscovered event", Constants.Name, Module);
             _client.GuildAvailable += Events.GuildDiscovered;
@@ -97,7 +107,7 @@ namespace PromisedLandDSPBot
             //commands.CommandErrored += Events.CommandsOnCommandErrored;
 
             var slash = _client.UseSlashCommands();
-            
+
             Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.admin");
             slash.RegisterCommands<Modules.Admin.Module.Slash>();
             
@@ -113,6 +123,9 @@ namespace PromisedLandDSPBot
             Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.triggers");
             slash.RegisterCommands<Modules.Triggers.Module.Slash>();
             
+            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.language");
+            slash.RegisterCommands<Modules.Language.Module.Slash>();
+
             Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "SlashOnSlashCommandErrored");
             slash.SlashCommandErrored += Events.SlashOnSlashCommandErrored;
             
@@ -131,7 +144,7 @@ namespace PromisedLandDSPBot
             string link =
                 $"https://discord.com/oauth2/authorize?client_id={_client.CurrentApplication.Id}&scope=bot&permissions={Constants.Permissions}";
             Log.Information("[{Name}][{Module}] invite link for bot is {Link}", Constants.Name, Module, link);
-            
+
             await Task.Delay(-1); // so the process doesn't end.
         }
     }
