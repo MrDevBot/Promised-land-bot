@@ -49,6 +49,8 @@ public class Module
                 .AddField("Version", Constants.Version, true)
                 //.AddField("In Line", "This is in line", true)
                 .Build();
+            
+            await ctx.Client.SendMessageAsync(ctx.Channel, de);
         }
 
         [SlashCommand("Say", "developer command, not available to the public")]

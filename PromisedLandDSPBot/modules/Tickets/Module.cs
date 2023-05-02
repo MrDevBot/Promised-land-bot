@@ -17,7 +17,7 @@ public class Module
         public async Task CreateTicket(InteractionContext ctx)
         {
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder().WithContent(":warning: invalid message id."));
+                new DiscordInteractionResponseBuilder().WithContent(":warning: this feature is still under development."));
 
             await Task.Delay(2000);
             await ctx.DeleteResponseAsync();
