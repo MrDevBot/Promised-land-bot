@@ -47,7 +47,10 @@ public class Events
     private static async Task OnErrorChannelReport(DiscordMember? m, DiscordChannel dc, Exception e)
     {
         if (m == null) return;
-
+        
+        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", Constants.Name, Module, e.Message, e.Source, e.ToString());
+        
+/*
         switch (e)
         {
             case CommandNotFoundException:
@@ -64,11 +67,27 @@ public class Events
                     $"sorry {m.Mention}, an error occured while trying to execute your command");
                 break;
         }
+        */
     }
     
     internal static Task GuildDiscovered(DiscordClient sender, GuildCreateEventArgs e)
     {
         Log.Information("[{Name}][{Module}] discovered guild {Guild} with Id {Id}", Constants.Name, Module, e.Guild.Name, e.Guild.Id.ToString());
+        return Task.CompletedTask;
+    }
+
+    public static Task MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
+    {
+        Log.Information("[{Name}][{Module}] message created in {Channel} by {User}#{Discriminator} ({Id}) with content {Content}", Constants.Name, Module, e.Channel.Name, e.Author.Username, e.Author.Discriminator, e.Author.Id.ToString(), e.Message.Content);
+
+        if (e.Message.Content.StartsWith(sender.CurrentUser.Mention))
+        {
+            Log.Information("[{Name}][{Module}] message directly mentioned bot, passing to language model", Constants.Name, Module);
+            
+            // todo parse message to language model
+        }
+            
+            
         return Task.CompletedTask;
     }
 }

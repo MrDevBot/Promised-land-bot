@@ -18,7 +18,7 @@ public static class Persistence
         private readonly object _lock = new object();
         private string filepath;
 
-        public Config(string filepath = "config.json")
+        public Config(string filepath = "Config\\core.json")
         {
             Log.Information("[{Name}][{Module}] config reader {Uuid} bound to path {Path}", Constants.Name, "CONFIG", uuid.ToString(), filepath);
             this.filepath = filepath;

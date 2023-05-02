@@ -18,14 +18,69 @@ public class Module
     private const string ModuleName = "ADMIN";
     
     [SlashCommandGroup("sudo", "Methods to assist server moderators."), RequireUserPermissions(Permissions.Administrator), RequireGuild()]
+    [RequirePermissions(Permissions.SendMessages)]
     public class Slash : ApplicationCommandModule
     {
+        [SlashCommand("whois", "lookup user information by ID")]
+        public async Task whois(InteractionContext ctx,
+            [Option("user", "the user you are attempting to lookup")] DiscordUser targetUser)
+        {
+            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to lookup {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+
+            
+            DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
+            {
+                Title = $"User Lookup: {targetUser.Username}#{targetUser.Discriminator}",
+                Color = DiscordColor.Azure,
+                Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail() { Url = targetUser.AvatarUrl },
+                Author = new DiscordEmbedBuilder.EmbedAuthor() { Name = $"{ctx.User.Username}#{ctx.User.Discriminator}", IconUrl = ctx.User.AvatarUrl },
+                Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"{Constants.Name} | {Constants.Version}", IconUrl = ctx.Client.CurrentUser.AvatarUrl },
+                Timestamp = DateTime.Now,
+            };
+            
+            // if the command is executed in a guild, we can get a member object with more information
+            if (ctx.Guild != null)
+            {
+                DiscordMember? target = await ctx.Guild.GetMemberAsync(targetUser.Id);
+                
+                embed.AddField("Username", targetUser.Username ?? "`unknown`", true);
+                embed.AddField("Discriminator", targetUser.Discriminator ?? "`unknown`", true);
+                embed.AddField("ID", targetUser.Id.ToString(), true);
+                embed.AddField("Bot", targetUser.IsBot.ToString(), true);
+                embed.AddField("Account Created At", targetUser.CreationTimestamp.DateTime.ToString(), true);
+                embed.AddField("Joined Server At", target.JoinedAt.DateTime.ToString(), true);
+                embed.AddField("Top Role", target.Roles.OrderByDescending(role => role.Position).First().Mention ?? "`unknown`", true);
+                embed.AddField("Nickname", target.Nickname ?? "`unknown`" , true);
+                embed.AddField("Status", target.Presence?.Status.GetName() ?? "`unknown`" , true);
+
+                embed.AddField("Global Permissions", target.PermissionsIn(ctx.Channel).ToPermissionString() ?? "unknown", true);
+
+            }
+            
+            // if the command is executed in a DM, we can only get a user object with limited information
+            else
+            {
+                DiscordUser x = ctx.Client.GetUserAsync(targetUser.Id).Result;
+
+                embed.AddField("Username", targetUser.Username ?? "`unknown`", true);
+                embed.AddField("Discriminator", targetUser.Discriminator ?? "`unknown`", true);
+                embed.AddField("ID", targetUser.Id.ToString(), true);
+                embed.AddField("Bot", targetUser.IsBot.ToString(), true);
+                embed.AddField("Account Created At", targetUser.CreationTimestamp.DateTime.ToString(), true);
+            }
+            
+            // send the embed
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(embed));
+        }
+        
         [SlashCommand("ban", "bans a specified user")]
-        [RequireGuild] [RequirePermissions(Permissions.BanMembers)]
+        [RequireGuild] [RequirePermissions(Permissions.BanMembers)][RequireBotPermissions(Permissions.BanMembers)]
         public async Task Ban(InteractionContext ctx, 
             [Option("user", "the user you are attempting to ban")] DiscordUser targetUser,
             [Option("reason", "the reason you are banning this user")] string reason)
         {
+            if(Checks.RejectDM(ctx)) return;
+            
             Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to ban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
             Task<DiscordMember>? target = ctx.Guild.GetMemberAsync(targetUser.Id);
             if(Hierarchy.Evaluate(ctx, ctx.Member, target.Result).Result && target.Result.IsOwner == false && (ctx.Member.Permissions & Permissions.BanMembers) != 0)
@@ -43,11 +98,13 @@ public class Module
         }
 
         [SlashCommand("unban", "unbans a specified user")]
-        [RequireGuild] [RequirePermissions(Permissions.BanMembers)]
+        [RequireGuild] [RequirePermissions(Permissions.BanMembers)][RequireBotPermissions(Permissions.BanMembers)]
         public async Task Unban(InteractionContext ctx, 
             [Option("id", "the id of the user you are attempting to unban")] DiscordUser targetUser,
             [Option("reason", "the id of the user you are attempting to unban")] string reason)
         {
+            if(Checks.RejectDM(ctx)) return;
+            
             try
             {
                 await ctx.Guild.UnbanMemberAsync(targetUser.Id, reason);
@@ -64,11 +121,13 @@ public class Module
         }
         
         [SlashCommand("kick", "bans a specified user")]
-        [RequireGuild] [RequirePermissions(Permissions.KickMembers)]
+        [RequireGuild] [RequirePermissions(Permissions.KickMembers)][RequireBotPermissions(Permissions.KickMembers)]
         public async Task Kick(InteractionContext ctx, 
             [Option("user", "the user you are attempting to ban")] DiscordUser targetUser,
             [Option("reason", "the reason you are banning this user")] string reason)
         {
+            if(Checks.RejectDM(ctx)) return;
+
             Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to kick {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
             
             Task<DiscordMember>? target = ctx.Guild.GetMemberAsync(targetUser.Id);

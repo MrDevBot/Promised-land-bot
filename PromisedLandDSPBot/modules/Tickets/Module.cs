@@ -12,6 +12,7 @@ public class Module
     [SlashCommandGroup("ticket", "ticket tool functionality group."), RequireGuild()]
     public class Slash : ApplicationCommandModule
     {
+        /*
         [SlashCommand("create", "Made to test how modals work in this framework.")]
         public async Task CreateTicket(InteractionContext ctx)
         {
@@ -44,5 +45,6 @@ public class Module
 
             await ctx.CreateResponseAsync(InteractionResponseType.Modal, response);
         }
+        */
     }
 }
