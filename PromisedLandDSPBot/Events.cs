@@ -5,6 +5,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
+using PromisedLandDSPBot.Shadow;
 using Serilog;
 
 namespace PromisedLandDSPBot;
@@ -86,8 +87,7 @@ public class Events
             
             // todo parse message to language model
         }
-            
-            
+
         return Task.CompletedTask;
     }
 }

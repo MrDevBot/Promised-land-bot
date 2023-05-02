@@ -119,6 +119,7 @@ public class Module
             }
         }
 
+        /*
         [SlashCommand("poke", "prompt the bot to respond to the ongoing conversation")]
         public async Task Poke(InteractionContext ctx)
         {
@@ -178,8 +179,9 @@ public class Module
                     "I'm sorry, the model is currently overloaded or unavailable, this is an issue with the OpenAI servers. Please try again later.");
             }
         }
+        */
     }
-
+    
     private class History
     {
         internal History()

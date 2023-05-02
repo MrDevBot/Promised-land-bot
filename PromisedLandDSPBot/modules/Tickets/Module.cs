@@ -12,10 +12,17 @@ public class Module
     [SlashCommandGroup("ticket", "ticket tool functionality group."), RequireGuild()]
     public class Slash : ApplicationCommandModule
     {
-        /*
-        [SlashCommand("create", "Made to test how modals work in this framework.")]
+        
+        [SlashCommand("create", "create a ticket from a message"), RequireGuild()]
         public async Task CreateTicket(InteractionContext ctx)
         {
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                new DiscordInteractionResponseBuilder().WithContent(":warning: invalid message id."));
+
+            await Task.Delay(2000);
+            await ctx.DeleteResponseAsync();
+            
+            /*
             var response = new DiscordInteractionResponseBuilder();
             response
                 .WithTitle("Ticket Submission")
@@ -44,7 +51,8 @@ public class Module
                     800));
 
             await ctx.CreateResponseAsync(InteractionResponseType.Modal, response);
-        }
         */
+            
+        }
     }
 }

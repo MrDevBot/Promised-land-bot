@@ -10,7 +10,7 @@ public class Checks
     {
         if (!ctx.Channel.IsPrivate) return false;
         ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-            .WithContent(":Warning: This command cannot be used in a DM channel."));
+            .WithContent(":warning: This command cannot be used in a DM channel."));
         return true;
 
     }
@@ -19,7 +19,7 @@ public class Checks
     {
         if (ctx.Channel.IsPrivate) return false;
         ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-            .WithContent(":Warning: This command cannot be used in a guild."));
+            .WithContent(":warning: This command cannot be used in a guild."));
         return true;
 
     }
@@ -28,7 +28,7 @@ public class Checks
     {
         if (ctx.Client.CurrentApplication.Owners.Contains(ctx.User)) return false;
         ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder()
-            .WithContent(":Warning: This command can only be used by the bot developer."));
+            .WithContent(":warning: This command can only be used by the bot developer."));
         return true;
 
     }

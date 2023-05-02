@@ -2,6 +2,7 @@
 using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.Logging;
+using PromisedLandDSPBot.Shadow;
 using Serilog;
 using Serilog.Debugging;
 
