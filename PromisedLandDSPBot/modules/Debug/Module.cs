@@ -45,7 +45,7 @@ public class Module
                     true)
                 .AddField("Developers",
                     ctx.Client.CurrentApplication.Owners.Aggregate(string.Empty,
-                        (current, Developer) => current + (Developer.Username + "#" + Developer.Discriminator)), true)
+                        (current, Developer) => current + (Developer.Username + "#" + Developer.Discriminator + "\n")), true)
                 .AddField("Version", Constants.Version, true)
                 //.AddField("In Line", "This is in line", true)
                 .Build();
