@@ -5,6 +5,8 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.SlashCommands.EventArgs;
+using LiteDB;
+using PromisedLandDSPBot.Models;
 using Serilog;
 
 namespace PromisedLandDSPBot;
@@ -12,24 +14,31 @@ namespace PromisedLandDSPBot;
 public class Events
 {
     private const string Module = "EVENTS";
-    internal static Task ClientOnModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
+    private readonly Config _config;
+
+    internal Events(Config config)
     {
-        Log.Information("[{Name}][{Module}] ClientOnModalSubmitted event triggered by NOT IMPLEMENTED", Constants.Name, Module);
+        _config = config;
+    }
+    
+    internal Task ClientOnModalSubmitted(DiscordClient sender, ModalSubmitEventArgs e)
+    {
+        Log.Information("[{Name}][{Module}] ClientOnModalSubmitted event triggered by NOT IMPLEMENTED", _config.Name, Module);
         // Check modal id - if "suggestion-XXXX", delegate to a handler.
         //throw new NotImplementedException();
         return null;
     }
 
-    internal static async Task CommandsOnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
+    internal async Task CommandsOnCommandErrored(CommandsNextExtension sender, CommandErrorEventArgs e)
     {
-        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", Constants.Name, Module, e.Command.Name, e.Command.Module.ModuleType.Name, e.Exception.ToString());
+        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", _config.Name, Module, e.Command.Name, e.Command.Module.ModuleType.Name, e.Exception.ToString());
 
         await OnErrorChannelReport(e.Context.Member, e.Context.Channel, e.Exception);
     }
 
-    internal static async Task SlashOnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
+    internal async Task SlashOnSlashCommandErrored(SlashCommandsExtension sender, SlashCommandErrorEventArgs e)
     {
-        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", Constants.Name, Module, e.Context.CommandName, e.Context.SlashCommandsExtension.ToString(), e.Exception.ToString());
+        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", _config.Name, Module, e.Context.CommandName, e.Context.SlashCommandsExtension.ToString(), e.Exception.ToString());
 
         await OnErrorChannelReport(e.Context.Member, e.Context.Channel, e.Exception);
         //throw new NotImplementedException();
@@ -44,11 +53,11 @@ public class Events
     /// <param name="m">The Guild Member Invoker</param>
     /// <param name="dc">The Channel to post this message in. </param>
     /// <returns></returns>
-    private static async Task OnErrorChannelReport(DiscordMember? m, DiscordChannel dc, Exception e)
+    private async Task OnErrorChannelReport(DiscordMember? m, DiscordChannel dc, Exception e)
     {
         if (m == null) return;
         
-        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", Constants.Name, Module, e.Message, e.Source, e.ToString());
+        Log.Error("[{Name}][{Module}] an error occured with {Command} in module {Module} with error {Exception}", _config.Name, Module, e.Message, e.Source, e.ToString());
         
 /*
         switch (e)
@@ -70,24 +79,43 @@ public class Events
         */
     }
     
-    internal static Task GuildDiscovered(DiscordClient sender, GuildCreateEventArgs e)
+    internal Task GuildDiscovered(DiscordClient sender, GuildCreateEventArgs e)
     {
-        Log.Information("[{Name}][{Module}] discovered guild {Guild} with Id {Id}", Constants.Name, Module, e.Guild.Name, e.Guild.Id.ToString());
+        Log.Information("[{Name}][{Module}] discovered guild {Guild} with Id {Id}", _config.Name, Module, e.Guild.Name, e.Guild.Id.ToString());
         return Task.CompletedTask;
     }
 
-    public static Task MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
+    public async Task MessageCreated(DiscordClient sender, MessageCreateEventArgs e)
     {
-        Log.Information("[{Name}][{Module}] message created in {Channel} by {User}#{Discriminator} ({Id}) with content {Content}", Constants.Name, Module, e.Channel.Name, e.Author.Username, e.Author.Discriminator, e.Author.Id.ToString(), e.Message.Content);
+        Log.Information("[{Name}][{Module}] message created in {Channel} by {User}#{Discriminator} ({Id}) with content {Content}", _config.Name, Module, e.Channel.Name, e.Author.Username, e.Author.Discriminator, e.Author.Id.ToString(), e.Message.Content);
 
         if (e.Message.Content.StartsWith(sender.CurrentUser.Mention))
         {
-            Log.Information("[{Name}][{Module}] message directly mentioned bot, passing to language model", Constants.Name, Module);
-            
+            Log.Information("[{Name}][{Module}] message directly mentioned bot, passing to language model", _config.Name, Module);
+
             // todo parse message to language model
         }
-            
-            
-        return Task.CompletedTask;
+
+        // implement the level system here
+        using (var db = new LiteDatabase($"Filename={e.Guild.Id}.db;Mode=Shared"))
+        {
+            var levelDataCollection = db.GetCollection<Level.User>("levelData");
+            var level = new Level(levelDataCollection);
+            var user = level.Get(e.Author.Id);
+            var xpToAdd = 5 + (e.Message.Attachments.Any() ? 5 : 0); // Add 5xp for a message and an additional 5xp if the message contains an image
+            if (user == null)
+            {
+                // If the User object doesn't exist, create a new one with the initial experience points
+                user = new Level.User { Id = e.Author.Id, Xp = xpToAdd };
+            }
+            else
+            {
+                // If the User object exists, add experience points to it
+                user = new Level.User { Id = user.Id, Xp = user.Xp + xpToAdd };
+            }
+
+            // Update the User object in the database
+            level.Set(user.Id, user.Xp);
+        }
     }
 }
