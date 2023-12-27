@@ -21,11 +21,13 @@ public class Module
     [RequirePermissions(Permissions.SendMessages)]
     public class Slash : ApplicationCommandModule
     {
+        private Config _config = Program.Config;
+        
         [SlashCommand("whois", "lookup user information by ID")]
         public async Task whois(InteractionContext ctx,
             [Option("user", "the user you are attempting to lookup")] DiscordUser targetUser)
         {
-            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to lookup {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to lookup {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
 
             
             DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
@@ -34,7 +36,7 @@ public class Module
                 Color = DiscordColor.Azure,
                 Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail() { Url = targetUser.AvatarUrl },
                 Author = new DiscordEmbedBuilder.EmbedAuthor() { Name = $"{ctx.User.Username}#{ctx.User.Discriminator}", IconUrl = ctx.User.AvatarUrl },
-                Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"{Constants.Name} | {Constants.Version}", IconUrl = ctx.Client.CurrentUser.AvatarUrl },
+                Footer = new DiscordEmbedBuilder.EmbedFooter() { Text = $"{_config.Name} | {_config.Version}", IconUrl = ctx.Client.CurrentUser.AvatarUrl },
                 Timestamp = DateTime.Now,
             };
             
@@ -81,18 +83,18 @@ public class Module
         {
             if(Checks.RejectDM(ctx)) return;
             
-            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to ban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to ban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
             Task<DiscordMember>? target = ctx.Guild.GetMemberAsync(targetUser.Id);
             if(Hierarchy.Evaluate(ctx, ctx.Member, target.Result).Result && target.Result.IsOwner == false && (ctx.Member.Permissions & Permissions.BanMembers) != 0)
             {
                 await ctx.Guild.BanMemberAsync(targetUser.Id, 7, reason);
 
-                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) banned {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) banned {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
                 await ctx.CreateResponseAsync($"Banned User {targetUser.Mention}");
             }
             else
             {
-                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) failed to ban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId}), they are higher in the hierarchy than the target user", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) failed to ban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId}), they are higher in the hierarchy than the target user", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
                 await ctx.CreateResponseAsync($"Sorry, but you do not have permission to do that! the user you are attempting to ban is higher in the role list than you are.");
             }
         }
@@ -108,12 +110,12 @@ public class Module
             try
             {
                 await ctx.Guild.UnbanMemberAsync(targetUser.Id, reason);
-                Log.Information($"[{Constants.Name}][{ModuleName}] user {ctx.User.Username}#{ctx.User.Discriminator} ({ctx.User.Id}) unbanned {targetUser.Username}#{targetUser.Discriminator} ({targetUser.Id})");
+                Log.Information($"[{_config.Name}][{ModuleName}] user {ctx.User.Username}#{ctx.User.Discriminator} ({ctx.User.Id}) unbanned {targetUser.Username}#{targetUser.Discriminator} ({targetUser.Id})");
                 await ctx.CreateResponseAsync($"user has been unbanned");
             }
             catch (DSharpPlus.Exceptions.NotFoundException)
             {
-                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) failed to unban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId}) as they are not banned.", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) failed to unban {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId}) as they are not banned.", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
                 await ctx.CreateResponseAsync(
                     "a ban for that user could not be found, please ensure you typed the **ID** or **@** correctly");
             }
@@ -128,18 +130,18 @@ public class Module
         {
             if(Checks.RejectDM(ctx)) return;
 
-            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to kick {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+            Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) is attempting to kick {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
             
             Task<DiscordMember>? target = ctx.Guild.GetMemberAsync(targetUser.Id);
             if(Hierarchy.Evaluate(ctx, ctx.Member, target.Result).Result && target.Result.IsOwner == false && (ctx.Member.Permissions & Permissions.KickMembers) != 0)
             {
                 await ctx.Guild.GetMemberAsync(targetUser.Id).Result.RemoveAsync();
-                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) kicked {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) kicked {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId})", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
                 await ctx.CreateResponseAsync($"Banned User {targetUser.Mention}");
             }
             else
             {
-                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) kicked {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId}), they are higher in the hierarchy than the target user", Constants.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
+                Log.Information("[{Name}][{ModuleName}] user {UserUsername}#{UserDiscriminator} ({UserId}) kicked {TargetUserUsername}#{TargetUserDiscriminator} ({TargetUserId}), they are higher in the hierarchy than the target user", _config.Name, ModuleName, ctx.User.Username, ctx.User.Discriminator, ctx.User.Id, targetUser.Username, targetUser.Discriminator, targetUser.Id);
                 await ctx.CreateResponseAsync($"Sorry, but you do not have permission to do that! the user you are attempting to ban is higher in the role list than you are.");
             }
         }
