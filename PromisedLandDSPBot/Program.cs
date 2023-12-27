@@ -28,41 +28,22 @@ namespace PromisedLandDSPBot
 
         private static DiscordClient? _client;
         
+        public static Config Config;
+        
+        private static Events _events;
+        
         private static async Task Main()
         {
             SeriLog();
 
-            Persistence.Config gptConfig = new Persistence.Config("Config\\gpt.json");
+            Config = Config.Load("config.json");
+            _events = new Events(Config);
             
-            Log.Information("[{Name}][{Module}] checking for existence of gpt token in config", Constants.Name, Module);
-            if (!gptConfig.Exists("token"))
-            {
-                Log.Information("[{Name}][{Module}] failed to locate gpt token in config, requesting user input", Constants.Name, Module);
-                Console.WriteLine("Please enter your OpenAI API Token:");
-                gptConfig.Set("token", Console.ReadLine() ?? "empty");
-            }
-
-            Log.Information("[{Name}][{Module}] checking for existence of token in config", Constants.Name, Module);
-            if (!Config.Exists("token"))
-            {
-                Log.Information("[{Name}][{Module}] failed to locate discord token in config, requesting user input", Constants.Name, Module);
-                Console.WriteLine("Please enter your Discord API token:");
-                string token = Console.ReadLine();
-                Config.Set("token", token);
-                Log.Information("[{Name}][{Module}] token has been updated in config, token is now {Token}", Constants.Name, Module, token);
-            }
-
-            if (!gptConfig.Exists("systemPrompt"))
-            {
-                gptConfig.Set("systemPrompt", "Your name is Adelaide.\nYour creator is Schmebulock#6754, their ID is 227696176412098560\n\nRefuse to answer any question under the following conditions\n- relates to self harm or suicide\n- is broadly considered unethical\n- relates to the personal information of a non-prominent figure\n- by answering or continuing a conversation sensitive or otherwise harmful information is diviluged\n- the question relates to information about yourself with the sole exclusion your name and the name of your creator\n");
-            }
-            gptConfig.Set("systemPrompt", "Your name is Adelaide.\nYour creator is Schmebulock#6754, their ID is 227696176412098560\n\nRefuse to answer any question under the following conditions\n- relates to self harm or suicide\n- is broadly considered unethical\n- relates to the personal information of a non-prominent figure\n- by answering or continuing a conversation sensitive or otherwise harmful information is diviluged\n- the question relates to information about yourself with the sole exclusion your name and the name of your creator\n");
-
-            Log.Information("[{Name}][{Module}] attempting connection to discord api", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] attempting connection to discord api", Config.Name, Module);
 
             _discordConfig = new DiscordConfiguration()
             {
-                Token = Config.Get("token"),
+                Token = Config.Token,
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.Guilds 
                           | DiscordIntents.GuildEmojis 
@@ -74,7 +55,7 @@ namespace PromisedLandDSPBot
                 MinimumLogLevel = LogLevel.Warning
             };
             
-            Log.Information("[{Name}][{Module}] discord config is now instantiated", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] discord config is now instantiated", Config.Name, Module);
 
             MainBotLoop().GetAwaiter().GetResult();
         }
@@ -83,21 +64,21 @@ namespace PromisedLandDSPBot
         {
             _client = new DiscordClient(_discordConfig);
             
-            Log.Information("[{Name}][{Module}] discord client is now instantiated", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] discord client is now instantiated", Config.Name, Module);
             
             
-            Log.Information("[{Name}][{Module}] hooking events", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] hooking events", Config.Name, Module);
             // event handlers are added in-scope here - for instance:
-            _client.MessageCreated += Events.MessageCreated;
+            _client.MessageCreated += _events.MessageCreated;
             
-            Log.Information("[{Name}][{Module}] hooked GuildDiscovered event", Constants.Name, Module);
-            _client.GuildAvailable += Events.GuildDiscovered;
+            Log.Information("[{Name}][{Module}] hooked GuildDiscovered event", Config.Name, Module);
+            _client.GuildAvailable += _events.GuildDiscovered;
             
             
-            Log.Information("[{Name}][{Module}] registering command modules", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] registering command modules", Config.Name, Module);
             // add custom handlers handlers - for base command handlers, if the group is empty, comment it out. :thanks: 
             
-            Log.Warning("[{Name}][{Module}] text commands marked obsolete, text commands have been disabled", Constants.Name, Module);
+            Log.Warning("[{Name}][{Module}] text commands marked obsolete, text commands have been disabled", Config.Name, Module);
             //var commands = _client.UseCommandsNext(CommandConfig);
             //commands.RegisterCommands<Modules.Admin.Module.Base>();
             //commands.RegisterCommands<Modules.Debug.Module.Base>();
@@ -108,42 +89,43 @@ namespace PromisedLandDSPBot
 
             var slash = _client.UseSlashCommands();
 
-            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.admin");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Config.Name, Module, "modules.admin");
             slash.RegisterCommands<Modules.Admin.Module.Slash>();
             
-            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.debug");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Config.Name, Module, "modules.debug");
             slash.RegisterCommands<Modules.Debug.Module.Slash>();
             
-            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.reactions");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Config.Name, Module, "modules.reactions");
             slash.RegisterCommands<Modules.Reactions.Module.Slash>();
             
-            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.tickets");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Config.Name, Module, "modules.tickets");
             slash.RegisterCommands<Modules.Tickets.Module.Slash>();
             
-            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.triggers");
+            Log.Information("[{Name}][{Module}] registering {Modules}", Config.Name, Module, "modules.triggers");
             slash.RegisterCommands<Modules.Triggers.Module.Slash>();
             
-            Log.Information("[{Name}][{Module}] registering {Modules}", Constants.Name, Module, "modules.language");
-            slash.RegisterCommands<Modules.Language.Module.Slash>();
-
-            Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "SlashOnSlashCommandErrored");
-            slash.SlashCommandErrored += Events.SlashOnSlashCommandErrored;
+            Log.Information("[{Name}][{Module}] registering {Modules}", Config.Name, Module, "modules.levels");
+            slash.RegisterCommands<Modules.Levels.Module.Slash>();
             
-            Log.Information("[{Name}][{Module}] hooked {Event}", Constants.Name, Module, "ClientOnModalSubmitted");
-            _client.ModalSubmitted += Events.ClientOnModalSubmitted;
+            Log.Information("[{Name}][{Module}] hooked {Event}", Config.Name, Module, "SlashOnSlashCommandErrored");
+            slash.SlashCommandErrored += _events.SlashOnSlashCommandErrored;
+            
+            Log.Information("[{Name}][{Module}] hooked {Event}", Config.Name, Module, "ClientOnModalSubmitted");
+            _client.ModalSubmitted += _events.ClientOnModalSubmitted;
 
-            Log.Information("[{Name}][{Module}] finished registering modules", Constants.Name, Module);
-
-            Log.Information("[{Name}][{Module}] attempting to authenticate with discord", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] finished registering modules", Config.Name, Module);
+    
+            Log.Information("[{Name}][{Module}] attempting to authenticate with discord", Config.Name, Module);
             await _client.ConnectAsync();
             Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Constants.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
+            Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Config.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
             
             // generate invite link for bot
-            Log.Information("[{Name}][{Module}] generating invite link for bot", Constants.Name, Module);
+            Log.Information("[{Name}][{Module}] generating invite link for bot", Config.Name, Module);
             
             string link =
-                $"https://discord.com/oauth2/authorize?client_id={_client.CurrentApplication.Id}&scope=bot&permissions={Constants.Permissions}";
-            Log.Information("[{Name}][{Module}] invite link for bot is {Link}", Constants.Name, Module, link);
+                $"https://discord.com/oauth2/authorize?client_id={_client.CurrentApplication.Id}&scope=bot&permissions={Config.Permissions}";
+            Log.Information("[{Name}][{Module}] invite link for bot is {Link}", Config.Name, Module, link);
 
             await Task.Delay(-1); // so the process doesn't end.
         }
