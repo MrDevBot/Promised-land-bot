@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -23,7 +24,6 @@ namespace PromisedLandDSPBot
             Log.Information("[{Name}] serilog sink started", "LOGGER");
         }
         
-        public static Persistence.Config Config = new();
         private static DiscordConfiguration? _discordConfig;
 
         private static DiscordClient? _client;
@@ -46,9 +46,15 @@ namespace PromisedLandDSPBot
                 Token = Config.Token,
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.Guilds 
-                          | DiscordIntents.GuildEmojis 
                           | DiscordIntents.GuildMembers 
                           | DiscordIntents.GuildMessageReactions 
+                          | DiscordIntents.GuildEmojisAndStickers
+                          
+                          // these require privileged intents to be enabled on the bot page
+                          | DiscordIntents.MessageContents
+                          | DiscordIntents.GuildMessages
+                          | DiscordIntents.GuildPresences
+                          
                           | DiscordIntents.DirectMessages
                           | DiscordIntents.AllUnprivileged,
                           // Remember to add these on the bot page!
@@ -117,7 +123,16 @@ namespace PromisedLandDSPBot
     
             Log.Information("[{Name}][{Module}] attempting to authenticate with discord", Config.Name, Module);
             await _client.ConnectAsync();
-            Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Constants.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
+            
+            
+            DiscordActivity activity = new DiscordActivity()
+            {
+                ActivityType = ActivityType.Playing,
+                Name = "slash commands"
+            };
+            
+            await _client.UpdateStatusAsync(activity, UserStatus.Online);
+            
             Log.Information("[{Name}][{Module}] authenticated with discord as {Username}#{Tag} with User Id {Id}", Config.Name, Module, _client.CurrentUser.Username, _client.CurrentUser.Discriminator, _client.CurrentUser.Id.ToString());
             
             // generate invite link for bot
