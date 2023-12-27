@@ -12,6 +12,8 @@ public class Module
     [SlashCommandGroup("ticket", "ticket tool functionality group."), RequireGuild()]
     public class Slash : ApplicationCommandModule
     {
+        private Config _config = Program.Config;
+        
         /*
         [SlashCommand("create", "Made to test how modals work in this framework.")]
         public async Task CreateTicket(InteractionContext ctx)
