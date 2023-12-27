@@ -17,6 +17,8 @@ public class Module
     [SlashCommandGroup("dev", "Debug Functions - Special Access Only")]
     public class Slash : ApplicationCommandModule
     {
+        private Config _config = Program.Config;
+        
         [SlashCommand("ping", "the latency between the bot and discord")]
         public async Task Ping(InteractionContext ctx)
         {
@@ -27,6 +29,7 @@ public class Module
         [SlashCommand("about", "general information about the bot")]
         public async Task About(InteractionContext ctx)
         {
+
             var de = new DiscordEmbedBuilder()
                 {
                     Color = DiscordColor.Blurple,
@@ -35,7 +38,7 @@ public class Module
                         IconUrl = ctx.Client.CurrentUser.AvatarUrl,
                         Name = ctx.Client.CurrentUser.Username,
                     },
-                    Title = $"About {Constants.Name}", Description = $"{Constants.Description}",
+                    Title = $"About {_config.Name}", Description = $"{_config.Description}",
                     Footer = new DiscordEmbedBuilder.EmbedFooter()
                         { Text = $"Application ID: {ctx.Client.CurrentApplication.Name}" }
                 }
@@ -46,9 +49,11 @@ public class Module
                 .AddField("Developers",
                     ctx.Client.CurrentApplication.Owners.Aggregate(string.Empty,
                         (current, Developer) => current + (Developer.Username + "#" + Developer.Discriminator)), true)
-                .AddField("Version", Constants.Version, true)
+                .AddField("Version", _config.Version, true)
                 //.AddField("In Line", "This is in line", true)
                 .Build();
+            
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(de));
         }
 
         [SlashCommand("Say", "developer command, not available to the public")]
