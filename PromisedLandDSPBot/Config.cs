@@ -1,99 +1,78 @@
-﻿using Newtonsoft.Json;
-using PromisedLandDSPBot;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using Serilog;
 
-public static class Persistence
+namespace PromisedLandDSPBot
 {
-    private struct Entry
+    /// <summary>
+    /// Endpoint configuration object
+    /// </summary>
+    public record Config
     {
-        public ulong UUID;
-        public string key;
-        public object value;
-    }
-    
-    public class Config
-    {
-        Guid uuid = Guid.NewGuid();
+        public Config()
+        {
+            // parameterless constructor for record
+        }
+
+        [JsonPropertyName("Token")] public string Token { get; init; } = "put_your_token_here";
+
+        [JsonPropertyName("Name")] public string Name { get; init; } = "Adelaide V2";
+
+        [JsonPropertyName("Owner")] public ulong Owner { get; init; } = 227696176412098560;
         
-        private readonly object _lock = new object();
-        private string filepath;
-
-        public Config(string filepath = "Config\\core.json")
+        [JsonPropertyName("Description")] public string Description { get; init; } = "Utility focused bot with `tickets`, `levels`, `moderation` and more!";
+        
+        [JsonPropertyName("Version")] public string Version { get; init; } = "V2 Indev, Electric Boogaloo";
+        
+        [JsonPropertyName("Permissions")] public ulong Permissions { get; init; } = 1497298594902; // generate using https://discordapi.com/permissions.html
+        
+        internal static Config New(string path)
         {
-            Log.Information("[{Name}][{Module}] config reader {Uuid} bound to path {Path}", Constants.Name, "CONFIG", uuid.ToString(), filepath);
-            this.filepath = filepath;
-            CheckNull();
+            // create a new config object
+            var retVal = new Config { };
+            
+            Log.Fatal("Please edit the config file at {Path} and restart the bot to continue", path);
+            
+            File.WriteAllText(path, JsonSerializer.Serialize(retVal));
+        
+            return retVal;
         }
-
-        private void CheckNull()
+        
+        internal static Config Load(string path, string? publicKeyOverride = null)
         {
-            lock (_lock)
+            try
             {
-                if (File.Exists(filepath))
-                {
-                    Log.Information("[{Name}][{Module}] config reader {Uuid} located its bound file", Constants.Name, "CONFIG", uuid.ToString(), filepath);
-                    
-                    if (JsonConvert.DeserializeObject<List<Entry>>(File.ReadAllText(this.filepath)) != null) return;
-                    
-                    Log.Warning("[{Name}][{Module}] config reader {Uuid} contained empty file, injecting blank structure", Constants.Name, "CONFIG", uuid.ToString(), filepath);
-                    File.WriteAllText(this.filepath, "[]");
-                }
-                else
-                {
-                    Log.Warning("[{Name}][{Module}] config reader {Uuid} failed to locate its bound file, creating new file", Constants.Name, "CONFIG", uuid.ToString(), filepath);
-                    File.WriteAllText(this.filepath, "[]");
-                }
+                // this function while similar to Scylla.Node/Config.cs but has a "fail lethal" design due to the nature
+                // of client public keys. It is impossible to securely authenticate or verify a client without a public key.
+        
+                // check if config file exists, throw exception if not
+                if (!File.Exists(path)) return New(path);
+        
+                // read config file
+                var configText = File.ReadAllText(path);
+
+                // check for empty config file, throw exception if empty
+                if (configText == string.Empty) return New(path);
+        
+                // deserialize config file
+                Config? retVal = JsonSerializer.Deserialize<Config>(configText);
+
+                // check for null config file, throw exception if null
+                if (retVal is null) return New(path);
                 
-
+                // return config
+                return retVal;
+            }
+            catch (Exception e)
+            {
+                Log.Error("Failed to load config with exception: {Exception}", e.Message);
+                throw new Exception("Failed to load config", e);
             }
         }
-
-        public string Get(string key)
+    
+        public void Save(string path)
         {
-            Log.Information("[{Name}][{Module}] config reader {Uuid} attempting to get key {Key}", Constants.Name, "CONFIG", uuid.ToString(), key);
-            lock (_lock)
-            {
-                List<Entry> entries = JsonConvert.DeserializeObject<List<Entry>>(File.ReadAllText(this.filepath)) ?? throw new InvalidOperationException();
-
-                // search for key, if key exists return its value, else return null
-                return entries.Where(entry => entry.key == key).Select(entry => entry.value.ToString()).FirstOrDefault() ?? throw new InvalidOperationException();
-            }
-        }
-
-        public void Set(string key, string value)
-        {
-            Log.Information("[{Name}][{Module}] config reader {Uuid} attempting to set key {Key} to value {Value}", Constants.Name, "CONFIG", uuid.ToString(), key, value);
-            lock (_lock)
-            {
-                List<Entry> entries = JsonConvert.DeserializeObject<List<Entry>>(File.ReadAllText(filepath)) ?? throw new InvalidOperationException();
-
-                // search for key, if key exists set its value, else add a new entry
-                if (entries.Any(entry => entry.key == key))
-                {
-                    entries.Where(entry => entry.key == key).Select(entry => entry.value = value).FirstOrDefault();
-                }
-                else
-                {
-                    entries.Add(new Entry()
-                    {
-                        UUID = (ulong)entries.Count,
-                        key = key,
-                        value = value
-                    });
-
-                    File.WriteAllText(this.filepath, JsonConvert.SerializeObject(entries));
-                }
-            }
-        }
-
-        public bool Exists(string key)
-        {
-            Log.Information("[{Name}][{Module}] config reader {Uuid} attempting to check if key {Key} exists", Constants.Name, "CONFIG", uuid.ToString(), key);
-            lock (_lock)
-            {
-                List<Entry> entries = JsonConvert.DeserializeObject<List<Entry>>(File.ReadAllText(this.filepath)) ?? throw new InvalidOperationException();
-                return entries.Any(entry => entry.key == key);
-            }
+            File.WriteAllText(path, JsonSerializer.Serialize(this));
         }
     }
 }
