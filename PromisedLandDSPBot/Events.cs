@@ -1,6 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.SlashCommands;
@@ -96,26 +95,22 @@ public class Events
             // todo parse message to language model
         }
 
-        // implement the level system here
-        using (var db = new LiteDatabase($"Filename={e.Guild.Id}.db;Mode=Shared"))
+        if (!e.Author.IsBot)
         {
+            using var db = new LiteDatabase($"Filename={e.Guild.Id}.db;Mode=Shared");
             var levelDataCollection = db.GetCollection<Level.User>("levelData");
-            var level = new Level(levelDataCollection);
-            var user = level.Get(e.Author.Id);
-            var xpToAdd = 5 + (e.Message.Attachments.Any() ? 5 : 0); // Add 5xp for a message and an additional 5xp if the message contains an image
-            if (user == null)
-            {
-                // If the User object doesn't exist, create a new one with the initial experience points
-                user = new Level.User { Id = e.Author.Id, Xp = xpToAdd };
-            }
-            else
-            {
+            var userRef = new Level(levelDataCollection);
+            var userLevel = userRef.Get(e.Author.Id);
+            
+            var xpToAdd = 5 + (e.Message.Attachments.Any() ? 5 : 0);
+            
+            userLevel = userLevel == null ? new Level.User { Id = e.Author.Id, Xp = xpToAdd } :
                 // If the User object exists, add experience points to it
-                user = new Level.User { Id = user.Id, Xp = user.Xp + xpToAdd };
-            }
+                new Level.User { Id = userLevel.Id, Xp = userLevel.Xp + xpToAdd };
 
             // Update the User object in the database
-            level.Set(user.Id, user.Xp);
+            userRef.Set(userLevel.Id, userLevel.Xp);            
         }
+
     }
 }

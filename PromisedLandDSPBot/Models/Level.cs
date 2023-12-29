@@ -17,7 +17,7 @@ namespace PromisedLandDSPBot.Models
             public long Xp { get; init; }
 
             [BsonIgnore]
-            public int CalculateLevel(int xp) => xp < 35 ? 0 : (xp < 55 ? 1 : (xp - 15) / 40);
+            public long CalculateLevel(int xp) => xp < 35 ? 0 : (xp < 55 ? 1 : (xp - 15) / 40);
         }
 
         public User Get(ulong userId)
