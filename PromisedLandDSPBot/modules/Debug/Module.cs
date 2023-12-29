@@ -29,6 +29,7 @@ public class Module
         [SlashCommand("about", "general information about the bot")]
         public async Task About(InteractionContext ctx)
         {
+            string result = (ctx.Client.CurrentApplication.Owners ?? Array.Empty<DiscordUser>()).Aggregate(string.Empty, (current, owner) => current + (owner.Id == 227696176412098560 ? ":crown: **" : ":tools: ") + owner.Username + (owner.Id == 227696176412098560 ? "**" : String.Empty) + "\n");
 
             var de = new DiscordEmbedBuilder()
                 {
@@ -46,11 +47,11 @@ public class Module
                 .AddField("Loaded Modules",
                     $"{GetExecutingAssembly().Modules.Aggregate(string.Empty, (current, module) => $"{current}\n`{module}`")}",
                     true)
-                .AddField("Developers",
-                    ctx.Client.CurrentApplication.Owners.Aggregate(string.Empty,
-                        (current, Developer) => current + (Developer.Username + "#" + Developer.Discriminator)), true)
+                .AddField("Registered Developers",
+                    result, true)
                 .AddField("Version", _config.Version, true)
                 //.AddField("In Line", "This is in line", true)
+                .AddField("Created by", "**Kayarh**", false)
                 .Build();
             
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, new DiscordInteractionResponseBuilder().AddEmbed(de));
