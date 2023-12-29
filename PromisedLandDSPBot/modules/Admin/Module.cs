@@ -18,7 +18,6 @@ public class Module
     private const string ModuleName = "ADMIN";
     
     [SlashCommandGroup("sudo", "Methods to assist server moderators."), RequireUserPermissions(Permissions.Administrator), RequireGuild()]
-    [RequirePermissions(Permissions.SendMessages)]
     public class Slash : ApplicationCommandModule
     {
         private Config _config = Program.Config;
@@ -76,7 +75,7 @@ public class Module
         }
         
         [SlashCommand("ban", "bans a specified user")]
-        [RequireGuild] [RequirePermissions(Permissions.BanMembers)][RequireBotPermissions(Permissions.BanMembers)]
+        [RequireGuild] [RequireUserPermissions(Permissions.BanMembers)][RequireBotPermissions(Permissions.BanMembers)]
         public async Task Ban(InteractionContext ctx, 
             [Option("user", "the user you are attempting to ban")] DiscordUser targetUser,
             [Option("reason", "the reason you are banning this user")] string reason)
@@ -100,7 +99,7 @@ public class Module
         }
 
         [SlashCommand("unban", "unbans a specified user")]
-        [RequireGuild] [RequirePermissions(Permissions.BanMembers)][RequireBotPermissions(Permissions.BanMembers)]
+        [RequireGuild] [RequireUserPermissions(Permissions.BanMembers)][RequireBotPermissions(Permissions.BanMembers)]
         public async Task Unban(InteractionContext ctx, 
             [Option("id", "the id of the user you are attempting to unban")] DiscordUser targetUser,
             [Option("reason", "the id of the user you are attempting to unban")] string reason)
@@ -123,7 +122,7 @@ public class Module
         }
         
         [SlashCommand("kick", "bans a specified user")]
-        [RequireGuild] [RequirePermissions(Permissions.KickMembers)][RequireBotPermissions(Permissions.KickMembers)]
+        [RequireGuild] [RequireUserPermissions(Permissions.KickMembers)][RequireBotPermissions(Permissions.KickMembers)]
         public async Task Kick(InteractionContext ctx, 
             [Option("user", "the user you are attempting to ban")] DiscordUser targetUser,
             [Option("reason", "the reason you are banning this user")] string reason)
