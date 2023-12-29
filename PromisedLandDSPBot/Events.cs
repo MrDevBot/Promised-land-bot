@@ -98,19 +98,17 @@ public class Events
         if (!e.Author.IsBot)
         {
             using var db = new LiteDatabase($"Filename={e.Guild.Id}.db;Mode=Shared");
+
             var levelDataCollection = db.GetCollection<Level.User>("levelData");
             var userRef = new Level(levelDataCollection);
             var userLevel = userRef.Get(e.Author.Id);
-            
+
             var xpToAdd = 5 + (e.Message.Attachments.Any() ? 5 : 0);
-            
-            userLevel = userLevel == null ? new Level.User { Id = e.Author.Id, Xp = xpToAdd } :
-                // If the User object exists, add experience points to it
-                new Level.User { Id = userLevel.Id, Xp = userLevel.Xp + xpToAdd };
+
+            userLevel = new Level.User { Id = userLevel.Id, Xp = userLevel.Xp + xpToAdd };
 
             // Update the User object in the database
-            userRef.Set(userLevel.Id, userLevel.Xp);            
+            userRef.Set(userLevel.Id, userLevel.Xp);
         }
-
     }
 }

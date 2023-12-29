@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using System.Text;
+using DSharpPlus;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
@@ -27,21 +28,17 @@ public class Module
             if (levelUser.Get(user.Id) is { } lookupResult)
             {
                 var xp = lookupResult.Xp;
-                var level = lookupResult.CalculateLevel((int)xp);
-
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has `{xp}` XP and is at level `{level}`."));
+                var level = Level.CalculateLevel(xp);
+                
+                await ctx.CreateResponseAsync($"User {user.Mention} has `{xp}` XP and is at level `{level}`.");
             }
             else
             {
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} does not have any XP"));
+                await ctx.CreateResponseAsync($"User {user.Mention} does not have any XP");
             }
         }
 
-        [SlashCommand("Add", "Made to test how modals work in this framework. Requires the Manage Server permission.")]
+        [SlashCommand("Add", "Adds the specified amount of xp to the user. Requires Administrator permissions.")]
         [RequireGuild] [RequireUserPermissions(Permissions.Administrator)]
         public async Task Add(InteractionContext ctx, [Option("user", "the user to target")] DiscordUser user,
             [Option("xp", "the amount of xp to add")] long xp)
@@ -51,7 +48,7 @@ public class Module
             var databaseCollection = db.GetCollection<Level.User>("levelData");
             var levelUser = new Level(databaseCollection);
 
-            if (levelUser.Get(ctx.User.Id) is { } lookupResult)
+            if (levelUser.Get(user.Id) is { } lookupResult)
             {
                 // grab the user's current xp
                 var currentXp = lookupResult.Xp;
@@ -60,24 +57,21 @@ public class Module
                 var newXp = currentXp + xp;
 
                 // write the new xp to the database
-                levelUser.Set(ctx.User.Id, newXp);
+                levelUser.Set(user.Id, newXp);
 
-                var newLevel = lookupResult.CalculateLevel((int)newXp);
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has {newXp} XP and is now at level {newLevel}."));
+                var newLevel = Level.CalculateLevel(newXp);
+                
+                await ctx.CreateResponseAsync($"User {user.Mention} has {newXp} XP and is now at level {newLevel}.");
             }
             else
             {
-                levelUser.Set(ctx.User.Id, xp);
+                levelUser.Set(user.Id, xp);
 
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has {xp} XP and is now at level {xp}."));
+                await ctx.CreateResponseAsync($"User {user.Mention} has {xp} XP and is now at level {xp}.");
             }
         }
 
-        [SlashCommand("Remove", "Made to test how modals work in this framework. Requires the Manage Server permission.")]
+        [SlashCommand("Remove", "Made to test how modals work in this framework. Requires Administrator permissions.")]
         [RequireGuild] [RequireUserPermissions(Permissions.Administrator)]
         public async Task Remove(InteractionContext ctx,
             [Option("user", "the user to target")] DiscordUser user,
@@ -88,7 +82,7 @@ public class Module
             var databaseCollection = db.GetCollection<Level.User>("levelData");
             var levelUser = new Level(databaseCollection);
 
-            if (levelUser.Get(ctx.User.Id) is { } lookupResult)
+            if (levelUser.Get(user.Id) is { } lookupResult)
             {
                 // grab the user's current xp
                 var currentXp = lookupResult.Xp;
@@ -96,25 +90,24 @@ public class Module
                 // add the new xp to the current xp
                 var newXp = currentXp - xp;
 
+                if (newXp < 0) newXp = 0;
+                
                 // write the new xp to the database
-                levelUser.Set(ctx.User.Id, newXp);
+                levelUser.Set(user.Id, newXp);
 
-                var newLevel = lookupResult.CalculateLevel((int)newXp);
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has {newXp} XP and is now at level {newLevel}."));
+                var newLevel = Level.CalculateLevel(newXp);
+                
+                await ctx.CreateResponseAsync($"User {user.Mention} has {newXp} XP and is now at level {newLevel}.");
             }
             else
             {
-                levelUser.Set(ctx.User.Id, xp);
+                levelUser.Set(user.Id, xp);
 
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has {xp} XP and is now at level {xp}."));
+                await ctx.CreateResponseAsync($"User {user.Mention} has {xp} XP and is now at level {xp}.");
             }
         }
 
-        [SlashCommand("Set", "Sets the user's xp to the specified amount. Requires the Manage Server permission.")]
+        [SlashCommand("Set", "Sets the user's xp to the specified amount. Requires Administrator permissions.")]
         [RequireGuild] [RequireUserPermissions(Permissions.Administrator)]
         public async Task Set(InteractionContext ctx,
             [Option("user", "the user to target")] DiscordUser user,
@@ -125,7 +118,7 @@ public class Module
             var databaseCollection = db.GetCollection<Level.User>("levelData");
             var levelUser = new Level(databaseCollection);
 
-            if (levelUser.Get(ctx.User.Id) is { } lookupResult)
+            if (levelUser.Get(user.Id) is { } lookupResult)
             {
                 // grab the user's current xp
 
@@ -133,20 +126,44 @@ public class Module
                 var newXp = xp;
 
                 // write the new xp to the database
-                levelUser.Set(ctx.User.Id, newXp);
+                levelUser.Set(user.Id, newXp);
 
-                var newLevel = lookupResult.CalculateLevel((int)newXp);
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has {newXp} XP and is now at level {newLevel}."));
+                var newLevel = Level.CalculateLevel(newXp);
+                
+                await ctx.CreateResponseAsync($"User {user.Mention} has {newXp} XP and is now at level {newLevel}.");
             }
             else
             {
-                levelUser.Set(ctx.User.Id, xp);
+                levelUser.Set(user.Id, xp);
 
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
-                    new DiscordInteractionResponseBuilder().WithContent(
-                        $"User {ctx.User.Mention} has {xp} XP and is now at level {xp}."));
+                await ctx.CreateResponseAsync($"User {user.Mention} has {xp} XP and is now at level {xp}.");
+            }
+        }
+        
+        [SlashCommand("Calculate", "Calculates the required XP for a given level or the level for a given XP")]
+        public async Task Calculate(InteractionContext ctx,
+            [Option("XP", "the total XP")] long? xp = null,
+            [Option("Level", "the total Level")] long? level = null)
+        {
+            if (xp.HasValue && level.HasValue)
+            {
+                await ctx.CreateResponseAsync("Invalid set of parameters. Please provide either XP or Level, not both.", true);
+                return;
+            }
+
+            if (xp.HasValue)
+            {
+                var calculatedLevel = Level.CalculateLevel(xp.Value);
+                await ctx.CreateResponseAsync($"XP `{xp.Value}` equals Level `{calculatedLevel}`.");
+            }
+            else if (level.HasValue)
+            {
+                var calculatedXp = Level.CalculateXp(level.Value);
+                await ctx.CreateResponseAsync($"Level `{level.Value}` equals `{calculatedXp}` XP.");
+            }
+            else
+            {
+                await ctx.CreateResponseAsync("Invalid set of parameters. Please provide either XP or Level.", true);
             }
         }
     }
